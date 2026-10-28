@@ -1,0 +1,170 @@
+/*
+ * Estilo "Untitled": oscuro, sobrio y con acento morado.
+ * Solo se activa en modo oscuro dentro de .untitled (el prototipo).
+ * En modo claro se ve el estilo normal de la aplicación.
+ * Son reglas sin capas, así que ganan a las utilidades de Tailwind dentro del ámbito.
+ */
+.untitled {
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-outfit: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+.dark .untitled {
+  --app-primary: #8b6cf6;
+  --color-brand-25: #13101f;
+  --color-brand-50: #1a1530;
+  --color-brand-100: #241d42;
+  --color-brand-200: #3a2f66;
+  --color-brand-300: #6f5bd1;
+  --color-brand-400: #9b86ff;
+  --color-brand-500: #8b6cf6;
+  --color-brand-600: #7b5ae8;
+  --color-brand-700: #6a4bd6;
+  --color-brand-800: #5a3fb3;
+  --color-brand-900: #47328a;
+  --color-brand-950: #2a1d55;
+  background-color: #09090b;
+  color: #e4e4e7;
+}
+
+.dark .untitled .bg-white,
+.dark .untitled .dark\:bg-gray-900,
+.dark .untitled .dark\:bg-white\/3 {
+  background-color: #111113;
+}
+
+.dark .untitled .bg-gray-50 {
+  background-color: #09090b;
+}
+
+.dark .untitled .bg-gray-100,
+.dark .untitled .dark\:bg-gray-800 {
+  background-color: #18181b;
+}
+
+.dark .untitled .border-gray-200,
+.dark .untitled .dark\:border-gray-800 {
+  border-color: #27272a;
+}
+
+.dark .untitled .border-gray-100 {
+  border-color: #1f1f23;
+}
+
+.dark .untitled .ring-gray-300,
+.dark .untitled .dark\:ring-gray-700,
+.dark .untitled .ring-gray-200 {
+  --tw-ring-color: #3f3f46;
+}
+
+.dark .untitled .text-gray-800,
+.dark .untitled .text-gray-900,
+.dark .untitled .dark\:text-white\/90 {
+  color: #f4f4f5;
+}
+
+.dark .untitled .text-gray-700,
+.dark .untitled .dark\:text-gray-300 {
+  color: #d4d4d8;
+}
+
+.dark .untitled .text-gray-500,
+.dark .untitled .text-gray-600,
+.dark .untitled .dark\:text-gray-400 {
+  color: #a1a1aa;
+}
+
+.dark .untitled .shadow-theme-xs,
+.dark .untitled .shadow-theme-md {
+  box-shadow: none;
+}
+
+.dark .untitled .rounded-2xl {
+  border-radius: 0.875rem;
+}
+
+/*
+ * Ambientación "Finlandia" del stand: blanco y azul de la bandera (#003580).
+ * Solo para el prototipo (clase "finland" junto a "untitled").
+ */
+.untitled.finland {
+  --app-primary: #003580;
+  --color-brand-25: #f3f7fc;
+  --color-brand-50: #e6eef9;
+  --color-brand-100: #cddcf2;
+  --color-brand-200: #9dbce6;
+  --color-brand-300: #5f8fd1;
+  --color-brand-400: #2f64b5;
+  --color-brand-500: #003580;
+  --color-brand-600: #002e72;
+  --color-brand-700: #002760;
+  --color-brand-800: #00204e;
+  --color-brand-900: #001a3f;
+  --color-brand-950: #001029;
+}
+
+.dark .untitled.finland {
+  --app-primary: #3d6fc0;
+  --color-brand-25: #0d1a2e;
+  --color-brand-50: #12233f;
+  --color-brand-100: #183059;
+  --color-brand-200: #24457f;
+  --color-brand-300: #3d6fc0;
+  --color-brand-400: #7fa6e6;
+  --color-brand-500: #3d6fc0;
+  --color-brand-600: #5581cc;
+  --color-brand-700: #7fa6e6;
+  --color-brand-800: #a9c4f0;
+  --color-brand-900: #cddcf2;
+  --color-brand-950: #e6eef9;
+}
+
+/* Sidebar azul de la bandera, con textos blancos */
+.untitled.finland aside,
+.dark .untitled.finland aside {
+  background-color: #003580;
+  border-color: #002760;
+  color: #ffffff;
+}
+
+.untitled.finland aside h2 {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.untitled.finland aside .menu-item-inactive,
+.untitled.finland aside .menu-item-inactive:is(.dark *),
+.dark .untitled.finland aside .menu-item-inactive {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.untitled.finland aside .menu-item-inactive:hover,
+.dark .untitled.finland aside .menu-item-inactive:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.untitled.finland aside .menu-item-active,
+.dark .untitled.finland aside .menu-item-active {
+  background-color: #ffffff;
+  color: #003580;
+}
+
+.untitled.finland aside .menu-item-icon-inactive,
+.untitled.finland aside .menu-item-icon-active,
+.dark .untitled.finland aside .menu-item-icon-inactive,
+.dark .untitled.finland aside .menu-item-icon-active {
+  color: inherit;
+}
+
+.untitled.finland aside .app-logo {
+  background: #ffffff;
+  color: #003580;
+}
+
+.untitled.finland aside .text-gray-800 {
+  color: #ffffff;
+}
+
+.untitled.finland aside .app-logo {
+  background-color: #ffffff !important;
+  color: #003580;
+}

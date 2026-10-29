@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   BookingError,
+  authenticateStaff,
   blockSlot,
   cancelMeeting,
   createMeeting,
@@ -164,18 +165,65 @@ describe("cancelación y edición", () => {
   });
 });
 
+/** Datos válidos de un usuario del personal; cada prueba cambia solo lo que necesita. */
+function staff(overrides: Partial<Parameters<typeof createStaffUser>[1]> = {}) {
+  return {
+    name: "Ana Pérez",
+    email: "ana@empresa.cl",
+    username: "ana.perez",
+    password: "clave-segura-2026",
+    companyId: "empresa-a",
+    ...overrides,
+  };
+}
+
 describe("usuarios del personal", () => {
   it("no permite crear más de 30 usuarios", async () => {
     for (let i = 0; i < 30; i++) {
-      await createStaffUser(ctx, { name: `Persona ${i}`, email: `p${i}@empresa.cl`, companyId: "empresa-a" });
+      await createStaffUser(ctx, staff({ name: `Persona ${i}`, email: `p${i}@empresa.cl`, username: `persona${i}` }));
     }
     expect(await listStaffUsers(ctx)).toHaveLength(30);
-    await expect(createStaffUser(ctx, { name: "Extra", email: "extra@empresa.cl", companyId: "empresa-a" })).rejects.toBeInstanceOf(BookingError);
+    await expect(createStaffUser(ctx, staff({ email: "extra@empresa.cl", username: "extra" }))).rejects.toBeInstanceOf(BookingError);
   });
 
   it("no permite dos usuarios con el mismo correo", async () => {
-    await createStaffUser(ctx, { name: "Ana", email: "ana@empresa.cl", companyId: "empresa-a" });
-    await expect(createStaffUser(ctx, { name: "Ana 2", email: "ana@empresa.cl", companyId: "empresa-b" })).rejects.toBeInstanceOf(BookingError);
+    await createStaffUser(ctx, staff());
+    await expect(createStaffUser(ctx, staff({ username: "ana.2", companyId: "empresa-b" }))).rejects.toBeInstanceOf(BookingError);
+  });
+
+  it("no permite dos usuarios con el mismo nombre de usuario, sin distinguir mayúsculas", async () => {
+    await createStaffUser(ctx, staff());
+    await expect(createStaffUser(ctx, staff({ email: "otra@empresa.cl", username: "Ana.Perez" }))).rejects.toBeInstanceOf(BookingError);
+  });
+
+  it("valida el nombre de usuario y la contraseña mínima", async () => {
+    const badUser = await createStaffUser(ctx, staff({ username: "ab" })).catch((e: unknown) => e);
+    expect((badUser as BookingError).fields?.username).toBeTruthy();
+    const shortPassword = await createStaffUser(ctx, staff({ password: "corta" })).catch((e: unknown) => e);
+    expect((shortPassword as BookingError).fields?.password).toBeTruthy();
+  });
+
+  it("guarda la contraseña como hash, nunca en claro, y no la devuelve en el listado", async () => {
+    await createStaffUser(ctx, staff());
+    const raw = await ctx.client.query<{ password_hash: string }>("SELECT password_hash FROM staff_users");
+    expect(raw.rows[0].password_hash).not.toContain("clave-segura-2026");
+    expect(raw.rows[0].password_hash.startsWith("scrypt$")).toBe(true);
+    expect(Object.keys((await listStaffUsers(ctx))[0])).not.toContain("passwordHash");
+  });
+});
+
+describe("inicio de sesión del personal", () => {
+  it("entra con usuario y contraseña correctos, sin distinguir mayúsculas en el usuario", async () => {
+    const created = await createStaffUser(ctx, staff());
+    const user = await authenticateStaff(ctx, "ANA.perez", "clave-segura-2026");
+    expect(user?.id).toBe(created.id);
+    expect(user?.username).toBe("ana.perez");
+  });
+
+  it("rechaza una contraseña incorrecta o un usuario que no existe", async () => {
+    await createStaffUser(ctx, staff());
+    expect(await authenticateStaff(ctx, "ana.perez", "otra-clave-larga")).toBeNull();
+    expect(await authenticateStaff(ctx, "nadie", "clave-segura-2026")).toBeNull();
   });
 });
 

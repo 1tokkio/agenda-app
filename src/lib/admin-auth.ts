@@ -1,37 +1,51 @@
-import { createHash, createHmac, timingSafeEqual } from "node:crypto";
+import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { eq } from "drizzle-orm";
+import { getDb } from "@/db/client";
+import { staffUsers } from "@/db/schema";
 
 export const ADMIN_COOKIE = "admin_session";
 const SESSION_SECONDS = 60 * 60 * 12;
 
-/** PIN de la organización. Sin ADMIN_PIN no hay acceso al panel. */
-export function adminPin(): string | undefined {
-  return process.env.ADMIN_PIN || undefined;
+export type AdminUser = { id: string; name: string; email: string; username: string };
+
+/** Clave para firmar las sesiones. Sin ADMIN_SESSION_SECRET (32 caracteres o más) no hay acceso al panel. */
+export function sessionSecretConfigured(): boolean {
+  return (process.env.ADMIN_SESSION_SECRET ?? "").length >= 32;
 }
 
-export function checkPin(input: string): boolean {
-  const pin = adminPin();
-  if (!pin) return false;
-  // Comparamos hashes de igual longitud para que timingSafeEqual funcione.
-  const a = createHash("sha256").update(input).digest();
-  const b = createHash("sha256").update(pin).digest();
-  return timingSafeEqual(a, b);
+function sign(userId: string): string {
+  return createHmac("sha256", process.env.ADMIN_SESSION_SECRET!).update(`admin-session:${userId}`).digest("hex");
 }
 
-/** Valor de la cookie de sesión: un HMAC del PIN, nunca el PIN en claro. */
-export function sessionValue(): string | undefined {
-  const pin = adminPin();
-  if (!pin) return undefined;
-  return createHmac("sha256", pin).update("admin-session-v1").digest("hex");
+/** Valor de la cookie: "<id del usuario>.<firma>". La firma impide crear sesiones a mano. */
+export function sessionValue(userId: string): string {
+  return `${userId}.${sign(userId)}`;
 }
 
-export function isValidSession(value: string | undefined): boolean {
-  const expected = sessionValue();
-  if (!expected || !value) return false;
-  const a = Buffer.from(value);
-  const b = Buffer.from(expected);
-  return a.length === b.length && timingSafeEqual(a, b);
+/** Id del usuario si la cookie tiene una firma válida. */
+function userIdFromCookie(value: string | undefined): string | null {
+  if (!value || !sessionSecretConfigured()) return null;
+  const dot = value.lastIndexOf(".");
+  if (dot <= 0) return null;
+  const userId = value.slice(0, dot);
+  const given = Buffer.from(value.slice(dot + 1));
+  const expected = Buffer.from(sign(userId));
+  return given.length === expected.length && timingSafeEqual(given, expected) ? userId : null;
+}
+
+/** Usuario de la sesión actual, o null. Confirma en la base que el usuario sigue existiendo. */
+export async function currentAdmin(): Promise<AdminUser | null> {
+  const jar = await cookies();
+  const userId = userIdFromCookie(jar.get(ADMIN_COOKIE)?.value);
+  if (!userId) return null;
+  const [user] = await (await getDb())
+    .select({ id: staffUsers.id, name: staffUsers.name, email: staffUsers.email, username: staffUsers.username })
+    .from(staffUsers)
+    .where(eq(staffUsers.id, userId))
+    .limit(1);
+  return user ?? null;
 }
 
 export const sessionCookie = {
@@ -44,12 +58,10 @@ export const sessionCookie = {
 
 /** Para route handlers: responde 401 si no hay sesión válida. */
 export async function requireAdminApi(): Promise<NextResponse | null> {
-  const jar = await cookies();
-  if (isValidSession(jar.get(ADMIN_COOKIE)?.value)) return null;
+  if (await currentAdmin()) return null;
   return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 }
 
 export async function hasAdminSession(): Promise<boolean> {
-  const jar = await cookies();
-  return isValidSession(jar.get(ADMIN_COOKIE)?.value);
+  return (await currentAdmin()) !== null;
 }

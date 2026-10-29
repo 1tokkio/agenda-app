@@ -5,6 +5,7 @@ import type { Db } from "@/db/client";
 import { blocks, bookings, companies, staffUsers } from "@/db/schema";
 import type { MailProvider } from "@/mail";
 import { renderConfirmation } from "@/mail/templates/confirmation";
+import { hashPassword, verifyPassword } from "./password";
 import { validateBooking, isValidEmail, type BookingInput, type FieldErrors } from "./booking-rules";
 import { formatHour, isoDateInTimeZone } from "./format";
 import { slotsForDay } from "./slots";
@@ -34,7 +35,11 @@ export class BookingError extends Error {
 
 export type MeetingRecord = BookingInput & { id: string };
 export type BlockRecord = { id: string; date: string; time: string; reason: string };
-export type StaffUserRecord = { id: string; name: string; email: string; companyId: string };
+/** Usuario del personal sin datos de acceso: la contraseña nunca sale del servicio. */
+export type StaffUserRecord = { id: string; name: string; email: string; username: string; companyId: string };
+
+const USERNAME = /^[a-z0-9._-]{3,30}$/;
+const MIN_PASSWORD_LENGTH = 8;
 
 export type AgendaData = { meetings: MeetingRecord[]; blocks: BlockRecord[] };
 
@@ -308,25 +313,37 @@ export async function unblockSlot(ctx: BookingContext, id: string): Promise<void
   if (removed.length === 0) throw new BookingError("NOT_FOUND", "El bloqueo no existe");
 }
 
+const staffColumns = {
+  id: staffUsers.id,
+  name: staffUsers.name,
+  email: staffUsers.email,
+  username: staffUsers.username,
+  companyId: staffUsers.companyId,
+};
+
 export async function listStaffUsers(ctx: BookingContext): Promise<StaffUserRecord[]> {
-  return ctx.db.select().from(staffUsers).orderBy(asc(staffUsers.name));
+  return ctx.db.select(staffColumns).from(staffUsers).orderBy(asc(staffUsers.name));
 }
 
-/** Crea un usuario del personal; no se permiten más de `cfg.maxUsers`. */
+/** Crea un usuario del personal con usuario y contraseña; no se permiten más de `cfg.maxUsers`. */
 export async function createStaffUser(
   ctx: BookingContext,
-  input: { name: string; email: string; companyId: string },
+  input: { name: string; email: string; username: string; password: string; companyId: string },
 ): Promise<StaffUserRecord> {
   const { db, cfg } = ctx;
   const fields: FieldErrors = {};
   const name = input.name.trim();
   const email = input.email.trim();
+  const username = input.username.trim().toLowerCase();
   if (name.length < 2) fields.requesterName = "Escribe el nombre";
   if (!isValidEmail(email)) fields.requesterEmail = "Correo no válido";
+  if (!USERNAME.test(username)) fields.username = "Usa de 3 a 30 letras minúsculas, números, punto, guion o guion bajo";
+  if (input.password.length < MIN_PASSWORD_LENGTH) fields.password = `La contraseña debe tener al menos ${MIN_PASSWORD_LENGTH} caracteres`;
   if (!cfg.companies.some((c) => c.id === input.companyId)) fields.targetCompanyId = "Elige una empresa";
   if (Object.keys(fields).length > 0) throw new BookingError("INVALID", "Revisa los datos del usuario", fields);
 
   const id = randomUUID();
+  const passwordHash = await hashPassword(input.password);
   try {
     await db.transaction(async (tx) => {
       const existing = await tx.select({ id: staffUsers.id }).from(staffUsers);
@@ -335,14 +352,29 @@ export async function createStaffUser(
           requesterName: `Ya hay ${cfg.maxUsers} usuarios creados`,
         });
       }
-      await tx.insert(staffUsers).values({ id, name, email, companyId: input.companyId });
+      await tx.insert(staffUsers).values({ id, name, email, username, passwordHash, companyId: input.companyId });
     });
   } catch (err) {
     if (err instanceof BookingError) throw err;
-    if (isUniqueViolation(err)) throw new BookingError("CONFLICT", "Ese correo ya tiene usuario", { requesterEmail: "Ese correo ya tiene usuario" });
+    if (isUniqueViolation(err)) {
+      const message = "Ya existe un usuario con ese correo o nombre de usuario";
+      throw new BookingError("CONFLICT", message, { username: message, requesterEmail: message });
+    }
     throw err;
   }
-  return { id, name, email, companyId: input.companyId };
+  return { id, name, email, username, companyId: input.companyId };
+}
+
+/** Comprueba usuario y contraseña para entrar al panel. Devuelve null si no coinciden. */
+export async function authenticateStaff(ctx: BookingContext, username: string, password: string): Promise<StaffUserRecord | null> {
+  const [row] = await ctx.db
+    .select({ ...staffColumns, passwordHash: staffUsers.passwordHash })
+    .from(staffUsers)
+    .where(eq(staffUsers.username, username.trim().toLowerCase()))
+    .limit(1);
+  if (!row) return null;
+  const { passwordHash, ...user } = row;
+  return (await verifyPassword(password, passwordHash)) ? user : null;
 }
 
 export async function deleteStaffUser(ctx: BookingContext, id: string): Promise<void> {

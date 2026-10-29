@@ -33,7 +33,7 @@ se valida y un error de formato se reporta con un mensaje claro.
 ## Base de datos: Supabase
 
 1. Crea un proyecto en [supabase.com](https://supabase.com) (plan gratuito).
-2. En **Project Settings → Database → Connection string**, elige **Transaction pooler** (puerto 6543)
+2. Haz clic en **Connect** (arriba, en la página principal del proyecto) y abre la pestaña **Direct** (*Connection string*). En el selector de método, elige **Transaction pooler** (puerto 6543)
    y copia la cadena. Reemplaza `[YOUR-PASSWORD]` por la contraseña de la base.
 3. Aplica el esquema y los datos de referencia desde tu máquina:
 
@@ -46,6 +46,20 @@ se valida y un error de formato se reporta con un mensaje claro.
 
 Las migraciones están en la carpeta [`drizzle/`](drizzle). Para cambiar el esquema, edita
 [`src/db/schema.ts`](src/db/schema.ts) y ejecuta `npm run db:generate`.
+
+## Acceso al panel: usuarios y contraseñas
+
+El panel `/admin` pide usuario y contraseña. Los usuarios se guardan en la base (tabla `staff_users`) y la contraseña solo se guarda como hash.
+
+- **Primer usuario:** desde la carpeta del proyecto, con la misma `DATABASE_URL` de Supabase:
+
+  ```bash
+  npm run db:user -- ana.perez "una-clave-segura" "Ana Pérez" ana@empresa.cl empresa-a
+  ```
+
+  Los argumentos son: usuario, contraseña, nombre, correo y id de la empresa (`empresa-a` … `empresa-f`).
+- **Más usuarios:** cualquier usuario con acceso puede crearlos en **Usuarios** del panel. El límite es de 30.
+- `npm run db:demo` crea usuarios de prueba con la contraseña `demo-expo-2026`. No lo ejecutes contra la base de producción.
 
 ## Correo: Resend con remitente administrativo
 
@@ -68,8 +82,7 @@ y el correo queda marcado como no enviado.
    | Variable | Valor |
    |---|---|
    | `DATABASE_URL` | Cadena del pooler de Supabase |
-   | `ADMIN_PIN` | PIN del panel (largo y difícil de adivinar) |
-   | `ADMIN_NAME` / `ADMIN_EMAIL` | Datos del perfil del panel (opcionales) |
+   | `ADMIN_SESSION_SECRET` | Clave para firmar las sesiones del panel (32 caracteres o más, por ejemplo `openssl rand -hex 32`) |
    | `MAIL_PROVIDER` | `resend` |
    | `RESEND_API_KEY` | API Key de Resend |
    | `MAIL_FROM` | `AgendaFinlandia <agenda@tudominio.cl>` |

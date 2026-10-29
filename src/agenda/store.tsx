@@ -13,7 +13,7 @@ export type SlotState =
 export type AgendaMode = "public" | "admin";
 
 type MeetingInput = Omit<Meeting, "id">;
-type UserInput = Omit<StaffUser, "id">;
+type UserInput = Omit<StaffUser, "id"> & { password: string };
 
 type AgendaStore = {
   mode: AgendaMode;

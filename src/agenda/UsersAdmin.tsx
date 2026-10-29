@@ -11,21 +11,25 @@ import { useAgenda } from "./store";
 const inputClass =
   "h-12 w-full rounded-lg border border-gray-300 bg-white px-4 text-base text-gray-800 disabled:opacity-50 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90";
 
-/** Usuarios del personal de las empresas (máximo 30). */
+/** Usuarios del personal de las empresas (máximo 30). Cada uno entra al panel con usuario y contraseña. */
 export function UsersAdmin() {
   const { users, addUser, removeUser } = useAgenda();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [companyId, setCompanyId] = useState(COMPANIES[0].id);
   const [errors, setErrors] = useState<FieldErrors>({});
   const full = users.length >= MAX_USERS;
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const result = await addUser({ name, email, companyId });
+    const result = await addUser({ name, email, username, password, companyId });
     if (result.ok) {
       setName("");
       setEmail("");
+      setUsername("");
+      setPassword("");
       setErrors({});
     } else {
       setErrors(result.errors);
@@ -48,6 +52,30 @@ export function UsersAdmin() {
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Correo</span>
             <input type="email" disabled={full} className={inputClass} value={email} onChange={(e) => setEmail(e.target.value)} />
             {errors.requesterEmail && <span role="alert" className="text-sm text-error-600">{errors.requesterEmail}</span>}
+          </label>
+          <label className="flex flex-col gap-2">
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Usuario para entrar</span>
+            <input
+              disabled={full}
+              autoComplete="off"
+              autoCapitalize="none"
+              className={inputClass}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+            />
+            {errors.username && <span role="alert" className="text-sm text-error-600">{errors.username}</span>}
+          </label>
+          <label className="flex flex-col gap-2">
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Contraseña inicial</span>
+            <input
+              type="password"
+              disabled={full}
+              autoComplete="new-password"
+              className={inputClass}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            {errors.password && <span role="alert" className="text-sm text-error-600">{errors.password}</span>}
           </label>
           <label className="flex flex-col gap-2">
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Empresa</span>
@@ -73,6 +101,7 @@ export function UsersAdmin() {
                 <div className="min-w-0">
                   <p className="truncate font-medium text-gray-800 dark:text-white/90">{u.name}</p>
                   <p className="truncate text-sm text-gray-500 dark:text-gray-400">{u.email}</p>
+                  <p className="truncate text-sm text-gray-500 dark:text-gray-400">Usuario: {u.username}</p>
                 </div>
                 <div className="flex shrink-0 items-center gap-3">
                   <Badge size="sm" color="primary">{companyById(u.companyId)?.name}</Badge>

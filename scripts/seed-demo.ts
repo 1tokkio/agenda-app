@@ -49,10 +49,12 @@ const blocksToAdd = [
   { date: day2, time: at(day2, 4), reason: "Sala en mantención" },
 ];
 
+// Contraseña de demostración: solo para pruebas locales, nunca para la base de producción.
+const DEMO_PASSWORD = "demo-expo-2026";
 const users = [
-  { name: "Ana Pérez", email: "ana@empresa-a.example", companyId: "empresa-a" },
-  { name: "Luis Soto", email: "luis@empresa-b.example", companyId: "empresa-b" },
-  { name: "Marta Ruiz", email: "marta@empresa-c.example", companyId: "empresa-c" },
+  { name: "Ana Pérez", email: "ana@empresa-a.example", username: "ana.perez", password: DEMO_PASSWORD, companyId: "empresa-a" },
+  { name: "Luis Soto", email: "luis@empresa-b.example", username: "luis.soto", password: DEMO_PASSWORD, companyId: "empresa-b" },
+  { name: "Marta Ruiz", email: "marta@empresa-c.example", username: "marta.ruiz", password: DEMO_PASSWORD, companyId: "empresa-c" },
 ];
 
 async function main() {

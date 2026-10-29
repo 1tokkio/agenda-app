@@ -21,11 +21,14 @@ export const rooms = pgTable("rooms", {
   capacity: integer("capacity").notNull(),
 });
 
-// Personal de las empresas con acceso al panel y a la agenda (máximo 30; se valida en el servicio).
+// Personal de las empresas con acceso al panel (máximo 30; se valida en el servicio).
+// Cada usuario entra con usuario y contraseña; la contraseña se guarda solo como hash.
 export const staffUsers = pgTable("staff_users", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
+  username: text("username").notNull().unique(),
+  passwordHash: text("password_hash").notNull(),
   companyId: text("company_id")
     .notNull()
     .references(() => companies.id),

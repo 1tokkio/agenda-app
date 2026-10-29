@@ -51,5 +51,6 @@ export type StaffUser = {
   id: string;
   name: string;
   email: string;
+  username: string;
   companyId: string;
 };

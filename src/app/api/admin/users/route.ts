@@ -13,10 +13,13 @@ export async function POST(request: Request) {
 
   const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
   try {
+    const text = (key: string) => (typeof body?.[key] === "string" ? (body[key] as string) : "");
     const user = await createStaffUser(await defaultContext(), {
-      name: typeof body?.name === "string" ? body.name : "",
-      email: typeof body?.email === "string" ? body.email : "",
-      companyId: typeof body?.companyId === "string" ? body.companyId : "",
+      name: text("name"),
+      email: text("email"),
+      username: text("username"),
+      password: text("password"),
+      companyId: text("companyId"),
     });
     return NextResponse.json({ user }, { status: 201 });
   } catch (err) {

@@ -10,11 +10,15 @@ type Props = {
   logoText?: string;
 };
 
-/** Ingreso al panel con el PIN de la organización. Diseño inspirado en la pantalla de login de referencia. */
+const inputClass =
+  "h-12 w-full rounded-lg border border-gray-300 bg-white px-4 text-base text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90";
+
+/** Ingreso al panel con usuario y contraseña del personal. Diseño inspirado en la pantalla de login de referencia. */
 export function LoginForm({ eventName, subtitle, logoText }: Props) {
   const router = useRouter();
-  const [pin, setPin] = useState("");
-  const [showPin, setShowPin] = useState(false);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -26,7 +30,7 @@ export function LoginForm({ eventName, subtitle, logoText }: Props) {
       const response = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pin }),
+        body: JSON.stringify({ username, password }),
       });
       if (response.ok) {
         router.replace("/admin");
@@ -57,36 +61,49 @@ export function LoginForm({ eventName, subtitle, logoText }: Props) {
           {subtitle && (
             <p className="mt-1 text-xs tracking-[0.2em] text-gray-500 uppercase dark:text-gray-400">{subtitle}</p>
           )}
-          <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">Bienvenido. Ingresa el PIN del panel de organización.</p>
+          <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">Bienvenido. Ingresa con tu usuario del panel.</p>
         </div>
 
         <form onSubmit={submit} className="mt-8 flex flex-col gap-5">
           <label className="flex flex-col gap-2">
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">PIN</span>
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Usuario</span>
+            <input
+              type="text"
+              autoComplete="username"
+              autoCapitalize="none"
+              placeholder="Tu usuario"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+              autoFocus
+              className={inputClass}
+            />
+          </label>
+
+          <label className="flex flex-col gap-2">
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Contraseña</span>
             <span className="relative">
               <input
-                type={showPin ? "text" : "password"}
-                inputMode="numeric"
+                type={showPassword ? "text" : "password"}
                 autoComplete="current-password"
-                placeholder="Ingresa tu PIN"
-                value={pin}
-                onChange={(e) => setPin(e.target.value)}
+                placeholder="Tu contraseña"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 required
-                autoFocus
-                className="h-12 w-full rounded-lg border border-gray-300 bg-white px-4 pe-11 text-base tracking-widest text-gray-800 shadow-theme-xs placeholder:tracking-normal placeholder:text-gray-400 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
+                className={cn(inputClass, "pe-11")}
               />
               <button
                 type="button"
-                onClick={() => setShowPin((v) => !v)}
-                aria-label={showPin ? "Ocultar PIN" : "Mostrar PIN"}
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
                 className="absolute inset-e-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
               >
-                <EyeIcon open={showPin} />
+                <EyeIcon open={showPassword} />
               </button>
             </span>
           </label>
 
-          <p className="text-end text-xs text-gray-500 dark:text-gray-400">¿No tienes el PIN? Consúltalo con la organización.</p>
+          <p className="text-end text-xs text-gray-500 dark:text-gray-400">¿No tienes acceso? Pídelo a la organización.</p>
 
           {error && (
             <p role="alert" className="text-sm text-error-600">
@@ -96,7 +113,7 @@ export function LoginForm({ eventName, subtitle, logoText }: Props) {
 
           <button
             type="submit"
-            disabled={busy || pin.length === 0}
+            disabled={busy || username.length === 0 || password.length === 0}
             className={cn(
               "h-12 w-full rounded-lg text-sm font-semibold text-white shadow-theme-xs transition",
               "bg-brand-500 hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50",

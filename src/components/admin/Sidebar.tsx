@@ -118,7 +118,7 @@ export function Sidebar({
         })}
       </nav>
 
-      <div className="mt-auto">{footer}</div>
+      {showLabels && <div className="mt-auto">{footer}</div>}
     </aside>
   );
 }

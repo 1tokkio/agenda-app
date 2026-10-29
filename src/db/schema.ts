@@ -25,7 +25,7 @@ export const rooms = pgTable("rooms", {
  * Usuarios con acceso a la agenda (máximo 30; se valida en el servicio).
  * - "admin": entra al panel y crea usuarios.
  * - "member": usuario común, solo entra a la agenda y reserva.
- * Cada usuario entra con usuario y contraseña; la contraseña se guarda solo como hash.
+ * El acceso (correo y contraseña) vive en Supabase Authentication, con el mismo id.
  */
 export const staffUsers = pgTable(
   "staff_users",
@@ -34,7 +34,6 @@ export const staffUsers = pgTable(
     name: text("name").notNull(),
     email: text("email").notNull().unique(),
     username: text("username").notNull().unique(),
-    passwordHash: text("password_hash").notNull(),
     role: text("role", { enum: ["admin", "member"] })
       .notNull()
       .default("member"),

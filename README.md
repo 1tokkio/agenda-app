@@ -54,7 +54,7 @@ La agenda es privada: solo entra quien tiene un usuario creado en la base (tabla
 - **Administrador:** entra al panel `/admin`, crea usuarios y puede quitarlos.
 - **Usuario de la agenda:** entra a `/` y reserva reuniones. No ve el panel.
 
-La contraseña solo se guarda como hash. El límite es de 30 usuarios. Un administrador no puede quitarse a sí mismo ni dejar el panel sin administradores.
+Cada usuario tiene su cuenta en **Supabase Authentication** (correo y contraseña), y su perfil (empresa, cargo, teléfono) va en la misma cuenta y en la tabla `staff_users`. La contraseña nunca se guarda en la tabla de la app. El límite es de 30 usuarios. Un administrador no puede quitarse a sí mismo ni dejar el panel sin administradores.
 
 - **Primer administrador:** desde la carpeta del proyecto, con la misma `DATABASE_URL` de Supabase. Sin el último argumento se crea un administrador:
 
@@ -88,6 +88,7 @@ y el correo queda marcado como no enviado.
    | Variable | Valor |
    |---|---|
    | `DATABASE_URL` | Cadena del pooler de Supabase |
+   | `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` | URL del proyecto y clave service_role de Supabase (Project Settings → API Keys). Las cuentas de acceso se crean ahí |
    | `ADMIN_SESSION_SECRET` | Clave para firmar las sesiones del panel (32 caracteres o más, por ejemplo `openssl rand -hex 32`) |
    | `MAIL_PROVIDER` | `resend` |
    | `RESEND_API_KEY` | API Key de Resend |

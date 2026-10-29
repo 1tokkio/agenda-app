@@ -6,6 +6,7 @@
 import { closeDb, getDb } from "../src/db/client";
 import { BookingError, blockSlot, createMeeting, createStaffUser, listAgenda, type BookingContext } from "../src/lib/bookings";
 import type { BookingInput } from "../src/lib/booking-rules";
+import { supabaseAccounts } from "../src/lib/account-provider";
 import { config } from "../src/lib/config";
 import { formatHour } from "../src/lib/format";
 import { slotsForDay } from "../src/lib/slots";
@@ -58,7 +59,7 @@ const users = [
 ];
 
 async function main() {
-  const ctx: BookingContext = { db: await getDb(), cfg: config, mail: { name: "silencioso", async send() {} } };
+  const ctx: BookingContext = { db: await getDb(), cfg: config, mail: { name: "silencioso", async send() {} }, accounts: supabaseAccounts() };
 
   let meetingsAdded = 0;
   for (const m of meetings) {

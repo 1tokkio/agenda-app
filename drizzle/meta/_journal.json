@@ -29,6 +29,13 @@
       "when": 1793252421767,
       "tag": "0003_profile_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793257368253,
+      "tag": "0004_staff_accounts_in_supabase",
+      "breakpoints": true
     }
   ]
 }

@@ -7,6 +7,7 @@
  */
 import { closeDb, getDb } from "../src/db/client";
 import { BookingError, createStaffUser, type BookingContext } from "../src/lib/bookings";
+import { supabaseAccounts } from "../src/lib/account-provider";
 import { config } from "../src/lib/config";
 
 const [username, password, name, email, companyId, roleArg = "admin"] = process.argv.slice(2);
@@ -17,7 +18,7 @@ async function main() {
     process.exit(1);
   }
 
-  const ctx: BookingContext = { db: await getDb(), cfg: config, mail: { name: "silencioso", async send() {} } };
+  const ctx: BookingContext = { db: await getDb(), cfg: config, mail: { name: "silencioso", async send() {} }, accounts: supabaseAccounts() };
   try {
     const user = await createStaffUser(ctx, { username, password, name, email, companyId, role: roleArg });
     console.log(`Usuario creado: ${user.username} (${user.name}), rol: ${user.role}`);

@@ -1,11 +1,11 @@
-import { and, asc, eq, gte, lte, ne } from "drizzle-orm";
+import { and, asc, count, eq, gte, lte, ne, or } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 import type { EventConfig } from "@config/event";
 import type { Db } from "@/db/client";
 import { blocks, bookings, companies, staffUsers } from "@/db/schema";
 import type { MailProvider } from "@/mail";
 import { renderConfirmation } from "@/mail/templates/confirmation";
-import { hashPassword, verifyPassword } from "./password";
+import { AccountError, type AccountMetadata, type AccountProvider } from "./account-provider";
 import { validateBooking, isValidEmail, type BookingInput, type FieldErrors } from "./booking-rules";
 import { formatHour, isoDateInTimeZone } from "./format";
 import { slotsForDay } from "./slots";
@@ -20,6 +20,7 @@ export type BookingContext = {
   db: Db;
   cfg: EventConfig;
   mail: MailProvider;
+  accounts: AccountProvider;
 };
 
 export class BookingError extends Error {
@@ -345,17 +346,49 @@ export async function listStaffUsers(ctx: BookingContext): Promise<StaffUserReco
   return ctx.db.select(staffColumns).from(staffUsers).orderBy(asc(staffUsers.name));
 }
 
-/** Crea un usuario con usuario y contraseña; no se permiten más de `cfg.maxUsers`. Por defecto es usuario común. */
+/** Metadatos del perfil que se guardan también en la cuenta de acceso. */
+function accountMetadata(user: {
+  username: string;
+  name: string;
+  role: StaffRole;
+  companyId: string;
+  companyName: string | null;
+  jobTitle: string | null;
+  phone: string | null;
+}): AccountMetadata {
+  return {
+    username: user.username,
+    name: user.name,
+    role: user.role,
+    companyId: user.companyId,
+    companyName: user.companyName,
+    jobTitle: user.jobTitle,
+    phone: user.phone,
+  };
+}
+
+/** Error de la cuenta de acceso traducido a un error de la agenda (correo ya usado, o fallo general). */
+function fromAccountError(err: unknown, field: "requesterEmail" | "username"): unknown {
+  if (err instanceof AccountError && err.code === "EMAIL_TAKEN") {
+    return new BookingError("CONFLICT", err.message, { [field]: err.message });
+  }
+  return err;
+}
+
+/**
+ * Crea un usuario: primero su cuenta de acceso en Supabase y luego la fila del perfil con el mismo id.
+ * Si la fila falla, la cuenta se quita para no dejar accesos huérfanos. Máximo `cfg.maxUsers`.
+ */
 export async function createStaffUser(
   ctx: BookingContext,
   input: { name: string; email: string; username: string; password: string; companyId: string; role?: StaffRole },
 ): Promise<StaffUserRecord> {
   const role: StaffRole = input.role ?? "member";
   if (role !== "admin" && role !== "member") throw new BookingError("INVALID", "Rol no válido", { username: "Rol no válido" });
-  const { db, cfg } = ctx;
+  const { db, cfg, accounts } = ctx;
   const fields: FieldErrors = {};
   const name = input.name.trim();
-  const email = input.email.trim();
+  const email = input.email.trim().toLowerCase();
   const username = input.username.trim().toLowerCase();
   if (name.length < 2) fields.requesterName = "Escribe el nombre";
   if (!isValidEmail(email)) fields.requesterEmail = "Correo no válido";
@@ -364,27 +397,41 @@ export async function createStaffUser(
   if (!cfg.companies.some((c) => c.id === input.companyId)) fields.targetCompanyId = "Elige una empresa";
   if (Object.keys(fields).length > 0) throw new BookingError("INVALID", "Revisa los datos del usuario", fields);
 
-  const id = randomUUID();
-  const passwordHash = await hashPassword(input.password);
-  try {
-    await db.transaction(async (tx) => {
-      const existing = await tx.select({ id: staffUsers.id }).from(staffUsers);
-      if (existing.length >= cfg.maxUsers) {
-        throw new BookingError("INVALID", `Ya hay ${cfg.maxUsers} usuarios creados`, {
-          requesterName: `Ya hay ${cfg.maxUsers} usuarios creados`,
-        });
-      }
-      await tx.insert(staffUsers).values({ id, name, email, username, passwordHash, role, companyId: input.companyId });
+  const [{ total }] = await db.select({ total: count() }).from(staffUsers);
+  if (total >= cfg.maxUsers) {
+    throw new BookingError("INVALID", `Ya hay ${cfg.maxUsers} usuarios creados`, {
+      requesterName: `Ya hay ${cfg.maxUsers} usuarios creados`,
     });
+  }
+  const [taken] = await db
+    .select({ id: staffUsers.id })
+    .from(staffUsers)
+    .where(or(eq(staffUsers.email, email), eq(staffUsers.username, username)))
+    .limit(1);
+  if (taken) {
+    const message = "Ya existe un usuario con ese correo o nombre de usuario";
+    throw new BookingError("CONFLICT", message, { username: message, requesterEmail: message });
+  }
+
+  const profile = { name, email, username, role, companyId: input.companyId, companyName: null, jobTitle: null, phone: null };
+  let id: string;
+  try {
+    id = await accounts.create({ email, password: input.password, metadata: accountMetadata(profile) });
   } catch (err) {
-    if (err instanceof BookingError) throw err;
+    throw fromAccountError(err, "requesterEmail");
+  }
+
+  try {
+    await db.insert(staffUsers).values({ id, name, email, username, role, companyId: input.companyId });
+  } catch (err) {
+    await accounts.remove(id).catch(() => undefined);
     if (isUniqueViolation(err)) {
       const message = "Ya existe un usuario con ese correo o nombre de usuario";
       throw new BookingError("CONFLICT", message, { username: message, requesterEmail: message });
     }
     throw err;
   }
-  return { id, name, email, username, role, companyId: input.companyId, jobTitle: null, phone: null, companyName: null };
+  return { id, ...profile };
 }
 
 /** Perfil de un usuario con sesión. */
@@ -394,10 +441,10 @@ export async function getProfile(ctx: BookingContext, id: string): Promise<Staff
   return row;
 }
 
-/** Actualiza el perfil propio. Los campos vacíos opcionales se guardan como vacío (null). */
+/** Actualiza el perfil propio: primero la cuenta de acceso y luego la fila; si la fila falla, la cuenta vuelve a su estado. */
 export async function updateProfile(ctx: BookingContext, id: string, input: ProfileInput): Promise<StaffUserRecord> {
   const name = input.name.trim();
-  const email = input.email.trim();
+  const email = input.email.trim().toLowerCase();
   const jobTitle = input.jobTitle.trim();
   const phone = input.phone.trim();
   const companyName = input.companyName.trim();
@@ -409,31 +456,44 @@ export async function updateProfile(ctx: BookingContext, id: string, input: Prof
   if (companyName.length > 120) fields.companyName = "Máximo 120 caracteres";
   if (Object.keys(fields).length > 0) throw new BookingError("INVALID", "Revisa los datos del perfil", fields);
 
+  const current = await getProfile(ctx, id);
+  if (email !== current.email) {
+    const [taken] = await ctx.db.select({ id: staffUsers.id }).from(staffUsers).where(eq(staffUsers.email, email)).limit(1);
+    if (taken) throw new BookingError("CONFLICT", "Ese correo ya está en uso", { requesterEmail: "Ese correo ya está en uso" });
+  }
+
+  const updated = { ...current, name, email, jobTitle: jobTitle || null, phone: phone || null, companyName: companyName || null };
+  try {
+    await ctx.accounts.update(id, { email, metadata: accountMetadata(updated) });
+  } catch (err) {
+    throw fromAccountError(err, "requesterEmail");
+  }
+
   try {
     const [row] = await ctx.db
       .update(staffUsers)
-      .set({ name, email, jobTitle: jobTitle || null, phone: phone || null, companyName: companyName || null })
+      .set({ name, email, jobTitle: updated.jobTitle, phone: updated.phone, companyName: updated.companyName })
       .where(eq(staffUsers.id, id))
       .returning(staffColumns);
     if (!row) throw new BookingError("NOT_FOUND", "El usuario no existe");
     return row;
   } catch (err) {
+    await ctx.accounts.update(id, { email: current.email, metadata: accountMetadata(current) }).catch(() => undefined);
     if (err instanceof BookingError) throw err;
     if (isUniqueViolation(err)) throw new BookingError("CONFLICT", "Ese correo ya está en uso", { requesterEmail: "Ese correo ya está en uso" });
     throw err;
   }
 }
 
-/** Comprueba usuario y contraseña para entrar al panel. Devuelve null si no coinciden. */
+/** Comprueba usuario y contraseña contra la cuenta de acceso. Devuelve el perfil si coincide, o null. */
 export async function authenticateStaff(ctx: BookingContext, username: string, password: string): Promise<StaffUserRecord | null> {
   const [row] = await ctx.db
-    .select({ ...staffColumns, passwordHash: staffUsers.passwordHash })
+    .select({ ...staffColumns, email: staffUsers.email })
     .from(staffUsers)
     .where(eq(staffUsers.username, username.trim().toLowerCase()))
     .limit(1);
   if (!row) return null;
-  const { passwordHash, ...user } = row;
-  return (await verifyPassword(password, passwordHash)) ? user : null;
+  return (await ctx.accounts.signIn(row.email, password)) ? row : null;
 }
 
 /** Quita un usuario. Quien administra no puede quitarse a sí mismo ni dejar el panel sin administradores. */
@@ -446,6 +506,7 @@ export async function deleteStaffUser(ctx: BookingContext, id: string, actorId: 
       const admins = await tx.select({ id: staffUsers.id }).from(staffUsers).where(eq(staffUsers.role, "admin"));
       if (admins.length <= 1) throw new BookingError("INVALID", "Debe quedar al menos un administrador");
     }
+    await ctx.accounts.remove(id);
     await tx.delete(staffUsers).where(eq(staffUsers.id, id));
   });
 }

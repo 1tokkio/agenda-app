@@ -206,12 +206,12 @@ describe("usuarios del personal", () => {
     expect((shortPassword as BookingError).fields?.password).toBeTruthy();
   });
 
-  it("guarda la contraseña como hash, nunca en claro, y no la devuelve en el listado", async () => {
-    await createStaffUser(ctx, staff());
-    const raw = await ctx.client.query<{ password_hash: string }>("SELECT password_hash FROM staff_users");
-    expect(raw.rows[0].password_hash).not.toContain("clave-segura-2026");
-    expect(raw.rows[0].password_hash.startsWith("scrypt$")).toBe(true);
-    expect(Object.keys((await listStaffUsers(ctx))[0])).not.toContain("passwordHash");
+  it("la contraseña va a la cuenta de acceso y el perfil de la app no la guarda", async () => {
+    const created = await createStaffUser(ctx, staff());
+    const account = ctx.accounts.store.get(created.id);
+    expect(account?.password).toBe("clave-segura-2026");
+    expect(account?.metadata?.username).toBe("ana.perez");
+    expect(Object.keys((await listStaffUsers(ctx))[0])).not.toContain("password");
   });
 });
 

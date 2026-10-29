@@ -53,16 +53,16 @@ export function MeetingForm({ date, time, initial, submitLabel, onSubmit, onDone
   }
 
   return (
-    <form onSubmit={submit} className="flex flex-col gap-5" noValidate>
+    <form onSubmit={submit} className="grid gap-x-4 gap-y-3.5 md:grid-cols-2" noValidate>
       {/* Día y hora confirmados */}
-      <div className="flex flex-col gap-1 rounded-[12px] bg-brand-soft px-4 py-3.5">
+      <div className="flex flex-col gap-0.5 rounded-[12px] bg-brand-soft px-4 py-3 md:col-span-2">
         <span className="text-[15px] font-semibold text-brand-text">{formatDayLabel(date)}</span>
         <span className="text-sm text-brand-text tabular-nums">
           {time} – {endTime(time)} · 30 min · Sala de reuniones
         </span>
       </div>
-      {errors.time && <p role="alert" className="text-sm text-danger">{errors.time}</p>}
-      {errors.date && <p role="alert" className="text-sm text-danger">{errors.date}</p>}
+      {errors.time && <p role="alert" className="text-sm text-danger md:col-span-2">{errors.time}</p>}
+      {errors.date && <p role="alert" className="text-sm text-danger md:col-span-2">{errors.date}</p>}
 
       <Field label="Tu nombre" error={errors.requesterName}>
         <input className={inputClass} value={values.requesterName} onChange={(e) => set("requesterName", e.target.value)} autoComplete="name" />
@@ -72,7 +72,7 @@ export function MeetingForm({ date, time, initial, submitLabel, onSubmit, onDone
         <input className={inputClass} value={values.requesterCompany} onChange={(e) => set("requesterCompany", e.target.value)} autoComplete="organization" />
       </Field>
 
-      <Field label="Asunto de la reunión" error={errors.title}>
+      <Field label="Asunto de la reunión" error={errors.title} wide>
         <input className={inputClass} value={values.title} onChange={(e) => set("title", e.target.value)} maxLength={120} placeholder="Ej.: Presentación de catálogo" />
       </Field>
 
@@ -89,11 +89,11 @@ export function MeetingForm({ date, time, initial, submitLabel, onSubmit, onDone
         <input type="email" inputMode="email" className={inputClass} value={values.requesterEmail} onChange={(e) => set("requesterEmail", e.target.value)} autoComplete="email" />
       </Field>
 
-      <Field label="Correo de la otra persona (opcional)" error={errors.guestEmail} hint="Si lo escribes, también le llegará la confirmación.">
+      <Field label="Correo de la otra persona (opcional)" error={errors.guestEmail} hint="Si lo escribes, también le llegará la confirmación." wide>
         <input type="email" inputMode="email" className={inputClass} value={values.guestEmail} onChange={(e) => set("guestEmail", e.target.value)} />
       </Field>
 
-      <div className="mt-1 flex flex-col-reverse gap-3 border-t border-border pt-4 sm:flex-row sm:justify-end">
+      <div className="mt-1 flex flex-col-reverse gap-3 border-t border-border pt-4 sm:flex-row sm:justify-end md:col-span-2">
         {onCancelMeeting && (
           <button
             type="button"
@@ -118,9 +118,9 @@ export function MeetingForm({ date, time, initial, submitLabel, onSubmit, onDone
   );
 }
 
-function Field({ label, error, hint, children }: { label: string; error?: string; hint?: string; children: React.ReactNode }) {
+function Field({ label, error, hint, wide, children }: { label: string; error?: string; hint?: string; wide?: boolean; children: React.ReactNode }) {
   return (
-    <label className="flex flex-col gap-1.5">
+    <label className={`flex flex-col gap-1.5 ${wide ? "md:col-span-2" : ""}`}>
       <span className="text-sm font-medium text-text-2">{label}</span>
       {children}
       {hint && !error && <span className="text-xs text-muted">{hint}</span>}

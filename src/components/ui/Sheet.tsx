@@ -36,9 +36,9 @@ export function Sheet({
         aria-modal="true"
         aria-labelledby="sheet-title"
         onClick={(event) => event.stopPropagation()}
-        className="flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-[20px] bg-surface md:max-w-[480px] md:rounded-2xl"
+        className="flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-[20px] bg-surface md:max-w-[600px] md:rounded-2xl"
       >
-        <div className="flex items-start justify-between gap-4 border-b border-border px-6 py-5">
+        <div className="flex items-start justify-between gap-4 border-b border-border px-6 py-4">
           <div className="flex flex-col gap-1">
             <h2 id="sheet-title" className="text-xl font-medium text-text" style={{ fontFamily: "var(--font-display)" }}>
               {title}
@@ -56,7 +56,7 @@ export function Sheet({
             </svg>
           </button>
         </div>
-        <div className="overflow-y-auto px-6 py-5">{children}</div>
+        <div className="overflow-y-auto px-6 py-4">{children}</div>
       </div>
     </div>
   );

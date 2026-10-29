@@ -2,6 +2,7 @@ import "@/styles/untitled-theme.css";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/admin/AppShell";
 import { AgendaProvider } from "@/agenda/store";
+import { SidebarFooter } from "@/agenda/SidebarFooter";
 import { currentUser } from "@/lib/admin-auth";
 import { config } from "@/lib/config";
 
@@ -16,7 +17,15 @@ export default async function PanelLayout({ children }: { children: React.ReactN
   return (
     <div className="untitled finland">
       <AgendaProvider mode="admin">
-        <AppShell eventName={config.name} brandSubtitle={config.subtitle} logoText={config.logoText} user={user}>
+        <AppShell
+          eventName={config.name}
+          brandSubtitle={config.subtitle}
+          logoText={config.logoText}
+          rootLabel="Panel de organización"
+          sectionTitle="Organización"
+          footer={<SidebarFooter variant="admin" />}
+          user={user}
+        >
           {children}
         </AppShell>
       </AgendaProvider>

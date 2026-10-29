@@ -8,7 +8,15 @@ import { staffUsers } from "@/db/schema";
 export const ADMIN_COOKIE = "admin_session";
 const SESSION_SECONDS = 60 * 60 * 12;
 
-export type SessionUser = { id: string; name: string; email: string; username: string; role: "admin" | "member" };
+export type SessionUser = {
+  id: string;
+  name: string;
+  email: string;
+  username: string;
+  role: "admin" | "member";
+  companyId: string;
+  companyName: string | null;
+};
 
 /** Clave para firmar las sesiones. Sin ADMIN_SESSION_SECRET (32 caracteres o más) no hay acceso al panel. */
 export function sessionSecretConfigured(): boolean {
@@ -41,7 +49,15 @@ export async function currentUser(): Promise<SessionUser | null> {
   const userId = userIdFromCookie(jar.get(ADMIN_COOKIE)?.value);
   if (!userId) return null;
   const [user] = await (await getDb())
-    .select({ id: staffUsers.id, name: staffUsers.name, email: staffUsers.email, username: staffUsers.username, role: staffUsers.role })
+    .select({
+      id: staffUsers.id,
+      name: staffUsers.name,
+      email: staffUsers.email,
+      username: staffUsers.username,
+      role: staffUsers.role,
+      companyId: staffUsers.companyId,
+      companyName: staffUsers.companyName,
+    })
     .from(staffUsers)
     .where(eq(staffUsers.id, userId))
     .limit(1);

@@ -22,6 +22,13 @@
       "when": 1793242439602,
       "tag": "0002_staff_roles",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1793252421767,
+      "tag": "0003_profile_fields",
+      "breakpoints": true
     }
   ]
 }

@@ -38,6 +38,10 @@ export const staffUsers = pgTable(
     role: text("role", { enum: ["admin", "member"] })
       .notNull()
       .default("member"),
+    // Datos del perfil que completa cada usuario (opcionales).
+    jobTitle: text("job_title"),
+    phone: text("phone"),
+    companyName: text("company_name"),
     companyId: text("company_id")
       .notNull()
       .references(() => companies.id),

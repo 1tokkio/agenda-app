@@ -1,8 +1,9 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
 import { useSidebar, SidebarProvider } from "./SidebarContext";
-import { ADMIN_NAV, Sidebar, type NavItem } from "./Sidebar";
+import { ADMIN_NAV, Sidebar, isNavActive, type NavItem } from "./Sidebar";
 import { Header, type HeaderUser } from "./Header";
 
 type ShellProps = {
@@ -11,47 +12,66 @@ type ShellProps = {
   logoText?: string;
   children: React.ReactNode;
   navItems?: NavItem[];
-  subtitle?: string;
+  /** Título de la sección del menú (ORGANIZACIÓN, MENÚ…). */
+  sectionTitle?: string;
+  /** Primer tramo del breadcrumb del topbar. */
+  rootLabel: string;
+  /** Tarjeta al pie del menú (datos del evento o de ocupación). */
+  footer?: React.ReactNode;
   showLogout?: boolean;
   user?: HeaderUser;
-  logoutHref?: string;
 };
 
-/** Shell del panel: menú lateral, encabezado y contenido. Mismo esquema que AppLayout del template. */
-export function AppShell({ eventName, brandSubtitle, logoText, children, navItems = ADMIN_NAV, subtitle, showLogout = true, user, logoutHref }: ShellProps) {
+/** Shell de la app: menú lateral, topbar con breadcrumb y perfil, y contenido con el mismo espaciado en todas las vistas. */
+export function AppShell(props: ShellProps) {
   return (
     <SidebarProvider>
-      <ShellContent eventName={eventName} brandSubtitle={brandSubtitle} logoText={logoText} navItems={navItems} subtitle={subtitle} showLogout={showLogout} user={user} logoutHref={logoutHref}>
-        {children}
-      </ShellContent>
+      <ShellContent {...props} />
     </SidebarProvider>
   );
 }
 
-function ShellContent({ eventName, brandSubtitle, logoText, children, navItems, subtitle, showLogout, user, logoutHref }: ShellProps & { navItems: NavItem[] }) {
-  const { isExpanded, isHovered, isMobileOpen, setIsMobileOpen } = useSidebar();
+function ShellContent({
+  eventName,
+  brandSubtitle,
+  logoText,
+  children,
+  navItems = ADMIN_NAV,
+  sectionTitle,
+  rootLabel,
+  footer,
+  showLogout = true,
+  user,
+}: ShellProps) {
+  const { isExpanded, isMobile } = useSidebar();
+  const pathname = usePathname();
+  const currentLabel = navItems.find((item) => isNavActive(item, pathname))?.name ?? eventName;
 
   return (
-    <div className="min-h-screen xl:flex">
-      <Sidebar eventName={eventName} brandSubtitle={brandSubtitle} logoText={logoText} items={navItems} />
+    <div className="min-h-screen bg-bg text-text">
+      <Sidebar
+        eventName={eventName}
+        brandSubtitle={brandSubtitle}
+        logoText={logoText}
+        items={navItems}
+        sectionTitle={sectionTitle}
+        footer={footer}
+      />
 
-      {isMobileOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-gray-900/50 xl:hidden"
-          onClick={() => setIsMobileOpen(false)}
-          aria-hidden="true"
-        />
+      {isMobile && (
+        <SidebarOverlay />
       )}
 
-      <div
-        className={cn(
-          "min-w-0 flex-1 transition-[margin] duration-300 ease-in-out",
-          isExpanded || isHovered ? "xl:ms-72.5" : "xl:ms-22.5",
-        )}
-      >
-        <Header eventName={eventName} subtitle={subtitle} showLogout={showLogout} user={user} logoutHref={logoutHref} />
-        <main className="mx-auto w-full max-w-(--breakpoint-2xl) p-4 md:p-6">{children}</main>
+      <div className={cn("min-w-0 transition-[margin] duration-300 ease-in-out", !isMobile && (isExpanded ? "ms-[264px]" : "ms-[76px]"))}>
+        <Header rootLabel={rootLabel} currentLabel={currentLabel} user={user} showLogout={showLogout} />
+        <main className="px-5 pt-6 pb-12 md:px-10 md:pt-8">{children}</main>
       </div>
     </div>
   );
+}
+
+function SidebarOverlay() {
+  const { isMobileOpen, setIsMobileOpen } = useSidebar();
+  if (!isMobileOpen) return null;
+  return <div className="fixed inset-0 z-40 bg-gray-900/50" onClick={() => setIsMobileOpen(false)} aria-hidden="true" />;
 }

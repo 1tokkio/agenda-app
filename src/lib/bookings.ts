@@ -38,10 +38,24 @@ export type BlockRecord = { id: string; date: string; time: string; reason: stri
 export type StaffRole = "admin" | "member";
 
 /** Usuario con acceso a la agenda, sin datos de acceso: la contraseña nunca sale del servicio. */
-export type StaffUserRecord = { id: string; name: string; email: string; username: string; role: StaffRole; companyId: string };
+export type StaffUserRecord = {
+  id: string;
+  name: string;
+  email: string;
+  username: string;
+  role: StaffRole;
+  companyId: string;
+  jobTitle: string | null;
+  phone: string | null;
+  companyName: string | null;
+};
+
+/** Datos que cada usuario completa en su perfil. */
+export type ProfileInput = { name: string; email: string; jobTitle: string; phone: string; companyName: string };
 
 const USERNAME = /^[a-z0-9._-]{3,30}$/;
 const MIN_PASSWORD_LENGTH = 8;
+const PHONE = /^\+?[0-9 ()-]{6,20}$/;
 
 export type AgendaData = { meetings: MeetingRecord[]; blocks: BlockRecord[] };
 
@@ -322,6 +336,9 @@ const staffColumns = {
   username: staffUsers.username,
   role: staffUsers.role,
   companyId: staffUsers.companyId,
+  jobTitle: staffUsers.jobTitle,
+  phone: staffUsers.phone,
+  companyName: staffUsers.companyName,
 };
 
 export async function listStaffUsers(ctx: BookingContext): Promise<StaffUserRecord[]> {
@@ -367,7 +384,44 @@ export async function createStaffUser(
     }
     throw err;
   }
-  return { id, name, email, username, role, companyId: input.companyId };
+  return { id, name, email, username, role, companyId: input.companyId, jobTitle: null, phone: null, companyName: null };
+}
+
+/** Perfil de un usuario con sesión. */
+export async function getProfile(ctx: BookingContext, id: string): Promise<StaffUserRecord> {
+  const [row] = await ctx.db.select(staffColumns).from(staffUsers).where(eq(staffUsers.id, id)).limit(1);
+  if (!row) throw new BookingError("NOT_FOUND", "El usuario no existe");
+  return row;
+}
+
+/** Actualiza el perfil propio. Los campos vacíos opcionales se guardan como vacío (null). */
+export async function updateProfile(ctx: BookingContext, id: string, input: ProfileInput): Promise<StaffUserRecord> {
+  const name = input.name.trim();
+  const email = input.email.trim();
+  const jobTitle = input.jobTitle.trim();
+  const phone = input.phone.trim();
+  const companyName = input.companyName.trim();
+  const fields: FieldErrors = {};
+  if (name.length < 2) fields.requesterName = "Escribe tu nombre";
+  if (!isValidEmail(email)) fields.requesterEmail = "Correo no válido";
+  if (jobTitle.length > 80) fields.jobTitle = "Máximo 80 caracteres";
+  if (phone && !PHONE.test(phone)) fields.phone = "Teléfono no válido, por ejemplo +56 9 1234 5678";
+  if (companyName.length > 120) fields.companyName = "Máximo 120 caracteres";
+  if (Object.keys(fields).length > 0) throw new BookingError("INVALID", "Revisa los datos del perfil", fields);
+
+  try {
+    const [row] = await ctx.db
+      .update(staffUsers)
+      .set({ name, email, jobTitle: jobTitle || null, phone: phone || null, companyName: companyName || null })
+      .where(eq(staffUsers.id, id))
+      .returning(staffColumns);
+    if (!row) throw new BookingError("NOT_FOUND", "El usuario no existe");
+    return row;
+  } catch (err) {
+    if (err instanceof BookingError) throw err;
+    if (isUniqueViolation(err)) throw new BookingError("CONFLICT", "Ese correo ya está en uso", { requesterEmail: "Ese correo ya está en uso" });
+    throw err;
+  }
 }
 
 /** Comprueba usuario y contraseña para entrar al panel. Devuelve null si no coinciden. */

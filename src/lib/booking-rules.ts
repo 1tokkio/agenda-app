@@ -20,7 +20,7 @@ export type BookingInput = {
 };
 
 /** Errores por campo: los de la reserva y los de los datos de acceso del personal. */
-export type FieldErrors = Partial<Record<keyof BookingInput | "username" | "password", string>>;
+export type FieldErrors = Partial<Record<keyof BookingInput | "username" | "password" | "jobTitle" | "phone" | "companyName", string>>;
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 

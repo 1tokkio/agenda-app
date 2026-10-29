@@ -7,6 +7,8 @@ import {
   createMeeting,
   createStaffUser,
   deleteStaffUser,
+  getProfile,
+  updateProfile,
   listAgenda,
   listStaffUsers,
   unblockSlot,
@@ -241,6 +243,34 @@ describe("roles de acceso", () => {
     const common = await createStaffUser(ctx, staff({ email: "c@empresa.cl", username: "comun", role: "member" }));
     await deleteStaffUser(ctx, common.id, admin.id);
     expect((await listStaffUsers(ctx)).map((u) => u.id)).toEqual([admin.id]);
+  });
+});
+
+describe("perfil del usuario", () => {
+  it("guarda cargo, teléfono y nombre de empresa, y los campos vacíos quedan sin valor", async () => {
+    const user = await createStaffUser(ctx, staff());
+    const saved = await updateProfile(ctx, user.id, {
+      name: "Ana Pérez Soto",
+      email: "ana@empresa.cl",
+      jobTitle: " Gerente comercial ",
+      phone: "+56 9 1234 5678",
+      companyName: "Distribuidora Norte SpA",
+    });
+    expect(saved.jobTitle).toBe("Gerente comercial");
+    expect((await getProfile(ctx, user.id)).companyName).toBe("Distribuidora Norte SpA");
+
+    const cleared = await updateProfile(ctx, user.id, { name: "Ana Pérez Soto", email: "ana@empresa.cl", jobTitle: "", phone: "", companyName: "" });
+    expect(cleared.phone).toBeNull();
+    expect(cleared.companyName).toBeNull();
+  });
+
+  it("valida el teléfono y el correo, y no permite un correo ya usado por otro usuario", async () => {
+    const ana = await createStaffUser(ctx, staff());
+    await createStaffUser(ctx, staff({ email: "luis@empresa.cl", username: "luis.perez" }));
+    const badPhone = await updateProfile(ctx, ana.id, { name: "Ana", email: "ana@empresa.cl", jobTitle: "", phone: "abc", companyName: "" }).catch((e: unknown) => e);
+    expect((badPhone as BookingError).fields?.phone).toBeTruthy();
+    const taken = await updateProfile(ctx, ana.id, { name: "Ana", email: "luis@empresa.cl", jobTitle: "", phone: "", companyName: "" }).catch((e: unknown) => e);
+    expect((taken as BookingError).code).toBe("CONFLICT");
   });
 });
 

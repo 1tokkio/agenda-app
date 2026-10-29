@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAgenda } from "@/agenda/store";
 import { CalendarIcon, GridIcon, GroupIcon, ListIcon } from "@/components/icons";
 import { cn } from "@/lib/cn";
 import { useSidebar } from "./SidebarContext";
@@ -12,102 +13,120 @@ export type NavItem = {
   icon: React.ReactNode;
   /** Activo solo con la ruta exacta (por defecto activo también en subrutas). */
   exact?: boolean;
+  /** Enlace a otra vista de la app (muestra la flecha de enlace externo). */
   external?: boolean;
+  /** Muestra un contador con las reuniones agendadas. */
+  count?: "meetings";
 };
 
 export const ADMIN_NAV: NavItem[] = [
-  { name: "Calendario", href: "/admin", icon: <GridIcon className="size-6" />, exact: true },
-  { name: "Reuniones", href: "/admin/reuniones", icon: <ListIcon className="size-6" />, exact: true },
-  { name: "Usuarios", href: "/admin/usuarios", icon: <GroupIcon className="size-6" />, exact: true },
-  { name: "Agenda pública", href: "/", icon: <CalendarIcon className="size-6" />, exact: true },
+  { name: "Calendario", href: "/admin", icon: <GridIcon className="size-5" />, exact: true },
+  { name: "Reuniones", href: "/admin/reuniones", icon: <ListIcon className="size-5" />, exact: true, count: "meetings" },
+  { name: "Usuarios", href: "/admin/usuarios", icon: <GroupIcon className="size-5" />, exact: true },
+  { name: "Agenda pública", href: "/", icon: <CalendarIcon className="size-5" />, exact: true, external: true },
 ];
+
+/** Ruta activa: la coincidencia exacta, o el prefijo para el resto de los ítems. */
+export function isNavActive(item: NavItem, pathname: string): boolean {
+  if (item.external) return false;
+  return item.exact ? pathname === item.href : pathname.startsWith(item.href);
+}
 
 export function Sidebar({
   eventName,
   brandSubtitle,
   logoText,
   items = ADMIN_NAV,
+  sectionTitle = "Menú",
+  footer,
 }: {
   eventName: string;
   brandSubtitle?: string;
   logoText?: string;
   items?: NavItem[];
+  sectionTitle?: string;
+  footer?: React.ReactNode;
 }) {
-  const { isExpanded, isMobileOpen, isHovered, setIsHovered, setIsMobileOpen } = useSidebar();
+  const { isExpanded, isMobile, isMobileOpen, setIsMobileOpen } = useSidebar();
   const pathname = usePathname();
-  const showLabels = isExpanded || isHovered || isMobileOpen;
-
-  const isActive = (item: NavItem) => (item.exact ? pathname === item.href : pathname.startsWith(item.href));
+  const { meetings } = useAgenda();
+  const showLabels = isMobile || isExpanded;
 
   return (
     <aside
+      aria-label="Navegación principal"
       className={cn(
-        "fixed inset-s-0 top-0 z-50 flex h-screen flex-col border-e border-gray-200 bg-white px-5 text-gray-900 transition-all duration-300 ease-in-out xl:translate-x-0 dark:border-gray-800 dark:bg-gray-900 dark:text-white/90",
-        isExpanded || isMobileOpen || isHovered ? "w-72.5" : "w-22.5",
-        isMobileOpen ? "translate-x-0" : "-translate-x-full",
+        "fixed inset-y-0 start-0 z-50 flex h-screen flex-col gap-7 overflow-y-auto border-e border-border bg-surface px-3.5 py-5 text-text transition-[width,transform] duration-300 ease-in-out",
+        isMobile ? "w-[300px]" : isExpanded ? "w-[264px]" : "w-[76px]",
+        isMobile && !isMobileOpen && "-translate-x-full",
       )}
-      onMouseEnter={() => !isExpanded && setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
     >
-      <div className={cn("flex items-center gap-3 py-8", !showLabels && "xl:justify-center")}>
+      <div className={cn("flex min-h-10 items-center gap-3 px-1", !showLabels && "justify-center")}>
         <div
-          className="app-logo flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-white"
-          style={{ background: "var(--app-primary)" }}
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[11px] text-sm font-semibold text-white"
+          style={{ background: "var(--logo)" }}
           aria-hidden="true"
         >
           {(logoText ?? eventName).slice(0, 2).toUpperCase()}
         </div>
         {showLabels && (
           <span className="flex min-w-0 flex-col">
-            <span className="truncate text-base font-semibold text-gray-800 dark:text-white/90">{eventName}</span>
+            <span className="truncate text-[17px] font-medium text-text" style={{ fontFamily: "var(--font-display)" }}>
+              {eventName}
+            </span>
             {brandSubtitle && (
-              <span className="truncate text-[10px] font-normal tracking-[0.2em] text-gray-500 uppercase dark:text-gray-400">
-                {brandSubtitle}
-              </span>
+              <span className="truncate text-[11px] font-medium tracking-[0.12em] text-muted">{brandSubtitle}</span>
             )}
           </span>
         )}
       </div>
 
-      <nav className="no-scrollbar flex flex-col overflow-y-auto">
-        <h2
-          className={cn(
-            "mb-4 flex text-xs leading-5 text-gray-400 uppercase",
-            !showLabels ? "xl:justify-center" : "justify-start",
-          )}
-        >
-          {showLabels ? "Menú" : "···"}
-        </h2>
-        <ul className="flex flex-col gap-1">
-          {items.map((item) => {
-            const active = !item.external && isActive(item);
-            const className = cn(
-              "group menu-item",
-              active ? "menu-item-active" : "menu-item-inactive",
-              !showLabels && "xl:justify-center",
-            );
-            const content = (
-              <>
-                <span className={active ? "menu-item-icon-active" : "menu-item-icon-inactive"}>{item.icon}</span>
-                {showLabels && <span className="menu-item-text">{item.name}</span>}
-              </>
-            );
-            return (
-              <li key={item.name}>
-                {item.external ? (
-                  <a href={item.href} className={className} onClick={() => setIsMobileOpen(false)}>
-                    {content}
-                  </a>
-                ) : (
-                  <Link href={item.href} className={className} onClick={() => setIsMobileOpen(false)}>
-                    {content}
-                  </Link>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+      <nav className="flex flex-col gap-1">
+        {showLabels && (
+          <span className="px-3 pb-1.5 text-[11px] font-medium tracking-[0.08em] text-muted uppercase">{sectionTitle}</span>
+        )}
+        {items.map((item) => {
+          const active = isNavActive(item, pathname);
+          const count = item.count === "meetings" ? meetings.length : null;
+          const linkClass = cn(
+            "flex h-[42px] w-full items-center gap-3 rounded-[10px] px-3 text-sm font-medium transition-colors",
+            active ? "bg-brand-soft text-brand-text" : "text-text-2 hover:bg-surface-2",
+            !showLabels && "justify-center",
+          );
+          const content = (
+            <>
+              <span className="shrink-0" aria-hidden="true">
+                {item.icon}
+              </span>
+              {showLabels && <span className="min-w-0 flex-1 truncate">{item.name}</span>}
+              {showLabels && count !== null && <span className="text-xs text-muted tabular-nums">{count}</span>}
+              {showLabels && item.external && <ExternalIcon />}
+            </>
+          );
+          return (
+            <Link
+              key={item.name}
+              href={item.href}
+              className={linkClass}
+              aria-label={showLabels ? undefined : item.name}
+              aria-current={active ? "page" : undefined}
+              onClick={() => setIsMobileOpen(false)}
+            >
+              {content}
+            </Link>
+          );
+        })}
       </nav>
+
+      <div className="mt-auto">{footer}</div>
     </aside>
+  );
+}
+
+function ExternalIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" />
+    </svg>
   );
 }

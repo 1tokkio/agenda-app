@@ -3,12 +3,13 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
 type SidebarContextType = {
+  /** Escritorio: 264 px con texto (true) o 76 px solo con íconos (false). */
   isExpanded: boolean;
+  /** Móvil (menor de 768 px): el menú es un cajón que se abre sobre el contenido. */
+  isMobile: boolean;
   isMobileOpen: boolean;
-  isHovered: boolean;
+  /** Botón de menú del topbar: contrae o expande en escritorio, abre o cierra el cajón en móvil. */
   toggleSidebar: () => void;
-  toggleMobileSidebar: () => void;
-  setIsHovered: (hovered: boolean) => void;
   setIsMobileOpen: (open: boolean) => void;
 };
 
@@ -20,18 +21,21 @@ export function useSidebar() {
   return context;
 }
 
-/** Desde 1280 px el menú es fijo y se puede contraer; por debajo es un cajón. */
+const MOBILE_BELOW = 768;
+const EXPANDED_FROM = 1024;
+
+/** Menú según el ancho: cajón bajo 768 px, solo íconos entre 768 y 1023 px, expandido desde 1024 px. */
 export function SidebarProvider({ children }: { children: React.ReactNode }) {
   const [isExpanded, setIsExpanded] = useState(true);
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
-      const mobile = window.innerWidth < 1280;
-      setIsMobile(mobile);
-      if (!mobile) setIsMobileOpen(false);
+      const width = window.innerWidth;
+      setIsMobile(width < MOBILE_BELOW);
+      setIsExpanded(width >= EXPANDED_FROM);
+      if (width >= MOBILE_BELOW) setIsMobileOpen(false);
     };
     handleResize();
     window.addEventListener("resize", handleResize);
@@ -41,12 +45,13 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
   return (
     <SidebarContext.Provider
       value={{
-        isExpanded: isMobile ? false : isExpanded,
+        isExpanded,
+        isMobile,
         isMobileOpen,
-        isHovered,
-        toggleSidebar: () => setIsExpanded((prev) => !prev),
-        toggleMobileSidebar: () => setIsMobileOpen((prev) => !prev),
-        setIsHovered,
+        toggleSidebar: () => {
+          if (isMobile) setIsMobileOpen((open) => !open);
+          else setIsExpanded((expanded) => !expanded);
+        },
         setIsMobileOpen,
       }}
     >

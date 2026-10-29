@@ -3,12 +3,9 @@
 import { useState, useSyncExternalStore } from "react";
 import { motion } from "motion/react";
 import { cn } from "@/lib/cn";
-import { DAYS, SLOT_TIMES, TIME_ZONE, type Meeting } from "./data";
+import { DAYS, SLOT_TIMES, TIME_ZONE } from "./data";
 import { endTime } from "./logic";
 import { useAgenda, type SlotState } from "./store";
-
-/** Empresa del usuario con sesión: la asigna el admin y su nombre lo escribe el propio usuario en el perfil. */
-export type MyCompany = { companyId: string; companyName: string | null };
 
 type View = "days" | "week";
 
@@ -23,11 +20,9 @@ const TIME_COL_W = 76;
  * En celular se ve un día a la vez, con pestañas para elegirlo.
  */
 export function UserAgenda({
-  me,
   onSlotClick,
   onBookDay,
 }: {
-  me: MyCompany | null;
   onSlotClick: (date: string, time: string, state: SlotState) => void;
   /** Abre la reserva del primer horario libre del día. */
   onBookDay: (date: string) => void;
@@ -180,7 +175,6 @@ export function UserAgenda({
                             time={time}
                             weekday={weekdayLong(date)}
                             state={slotState(date, time)}
-                            isOwn={isOwnSlot(slotState(date, time), me)}
                             onPick={onSlotClick}
                           />
                         </div>
@@ -207,14 +201,12 @@ function SlotCell({
   time,
   weekday,
   state,
-  isOwn,
   onPick,
 }: {
   date: string;
   time: string;
   weekday: string;
   state: SlotState;
-  isOwn: boolean;
   onPick: (date: string, time: string, state: SlotState) => void;
 }) {
   const range = `${time} – ${endTime(time)}`;
@@ -240,12 +232,13 @@ function SlotCell({
     );
   }
 
-  if (isOwn) {
+  // Solo quien creó la reunión ve su título; los demás ven "Reservado".
+  if (state.meeting.mine) {
     return (
       <div
         className="flex h-full min-w-0 flex-col justify-center rounded-lg border px-2.5 py-1"
         style={{ background: "var(--own-bg)", borderColor: "var(--own-bd)", color: "var(--brand-text)" }}
-        aria-label={`Reunión de tu empresa: ${state.meeting.title}, ${range}`}
+        aria-label={`Tu reunión: ${state.meeting.title}, ${range}`}
       >
         <span className="truncate text-xs font-semibold">{state.meeting.title}</span>
         <span className="truncate text-[11px] tabular-nums">{range}</span>
@@ -285,7 +278,7 @@ function Legend() {
         <span className="h-3.5 w-3.5 rounded border border-dashed border-brand" /> Disponible
       </LegendItem>
       <LegendItem>
-        <span className="h-3.5 w-3.5 rounded border" style={{ background: "var(--own-bg)", borderColor: "var(--own-bd)" }} /> Tu empresa
+        <span className="h-3.5 w-3.5 rounded border" style={{ background: "var(--own-bg)", borderColor: "var(--own-bd)" }} /> Tu reunión
       </LegendItem>
       <LegendItem>
         <span className="h-3.5 w-3.5 rounded border" style={{ background: "var(--taken-bg)", borderColor: "var(--taken-bd)" }} /> Reservado
@@ -331,18 +324,6 @@ function ChevronIcon({ direction }: { direction: "left" | "right" }) {
       <path d={direction === "left" ? "M15 6l-6 6 6 6" : "M9 6l6 6-6 6"} />
     </svg>
   );
-}
-
-/** Una reunión es "de mi empresa" si la visitada es mi empresa, o si quien reservó escribió mi nombre de empresa. */
-/** Un bloque reservado es "de mi empresa" según la misma regla de la reunión. */
-function isOwnSlot(state: SlotState, me: MyCompany | null): boolean {
-  return state.kind === "booked" && isOwnMeeting(state.meeting, me);
-}
-
-export function isOwnMeeting(meeting: Meeting, me: MyCompany | null): boolean {
-  if (!me) return false;
-  if (meeting.targetCompanyId === me.companyId) return true;
-  return !!me.companyName && meeting.requesterCompany.trim().toLowerCase() === me.companyName.trim().toLowerCase();
 }
 
 /* ---------- Fechas ---------- */

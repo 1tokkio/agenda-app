@@ -25,9 +25,12 @@ const SLOTS = slotsForDay(DAY, config);
 const time = (i: number) => formatHour(new Date(SLOTS[i].startsAt), config.timezone);
 
 let ctx: Awaited<ReturnType<typeof createTestContext>>;
+/** Usuario que crea las reuniones de la prueba (queda como creador en la base). Se crea al primer uso. */
+let creator: string | undefined;
 
 beforeEach(async () => {
   ctx = await createTestContext();
+  creator = undefined;
 });
 
 afterEach(async () => {
@@ -48,6 +51,12 @@ function input(overrides: Partial<BookingInput> = {}): BookingInput {
   };
 }
 
+/** Reserva a nombre del creador de la prueba. */
+async function book(overrides: Partial<BookingInput> = {}) {
+  creator ??= (await createStaffUser(ctx, { name: "Camila Rojas", email: "camila@empresa.cl", username: "camila", password: "clave-segura-2026", companyId: "empresa-a" })).id;
+  return createMeeting(ctx, input(overrides), creator);
+}
+
 async function expectError(promise: Promise<unknown>, code: BookingError["code"]) {
   const err = await promise.then(
     () => {
@@ -62,7 +71,7 @@ async function expectError(promise: Promise<unknown>, code: BookingError["code"]
 
 describe("reserva válida", () => {
   it("crea la reunión y envía la confirmación a quien agenda", async () => {
-    const { meeting, mailSent } = await createMeeting(ctx, input());
+    const { meeting, mailSent } = await book();
 
     expect(meeting.targetCompanyId).toBe("empresa-a");
     expect(mailSent).toBe(true);
@@ -71,13 +80,13 @@ describe("reserva válida", () => {
   });
 
   it("envía también la confirmación a la otra persona si se indicó su correo", async () => {
-    await createMeeting(ctx, input({ guestEmail: "gerencia@ejemplo.cl" }));
+    await book({ guestEmail: "gerencia@ejemplo.cl" });
     expect(ctx.mail.sent.map((m) => m.to)).toEqual(["camila@ejemplo.cl", "gerencia@ejemplo.cl"]);
   });
 
   it("si el correo falla, la reunión se mantiene", async () => {
     ctx.mail.shouldFail = true;
-    const { meeting, mailSent } = await createMeeting(ctx, input());
+    const { meeting, mailSent } = await book();
 
     expect(mailSent).toBe(false);
     expect((await listAgenda(ctx, { full: true })).meetings.map((m) => m.id)).toContain(meeting.id);
@@ -86,12 +95,12 @@ describe("reserva válida", () => {
 
 describe("doble reserva y horario ocupado", () => {
   it("rechaza otra reunión en el mismo bloque, aunque sea de otra empresa", async () => {
-    await createMeeting(ctx, input());
-    await expectError(createMeeting(ctx, input({ targetCompanyId: "empresa-b" })), "CONFLICT");
+    await book();
+    await expectError(book({ targetCompanyId: "empresa-b" }), "CONFLICT");
   });
 
   it("la base rechaza la doble reserva aunque se salte el servicio", async () => {
-    await createMeeting(ctx, input());
+    await book();
     const insert = ctx.client.query(
       "INSERT INTO bookings (id, room_id, target_company_id, title, requester_name, requester_company, requester_email, starts_at, ends_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
       ["manual", "sala-unica", "empresa-b", "Manual", "X", "Y", "x@y.cl", new Date(SLOTS[0].startsAt), new Date(SLOTS[0].endsAt)],
@@ -100,28 +109,28 @@ describe("doble reserva y horario ocupado", () => {
   });
 
   it("no agenda dos reuniones para la misma empresa a la misma hora", async () => {
-    await createMeeting(ctx, input({ targetCompanyId: "empresa-c" }));
-    await expectError(createMeeting(ctx, input({ targetCompanyId: "empresa-c", time: time(0) })), "CONFLICT");
+    await book({ targetCompanyId: "empresa-c" });
+    await expectError(book({ targetCompanyId: "empresa-c", time: time(0) }), "CONFLICT");
   });
 });
 
 describe("validaciones", () => {
   it("rechaza un horario que no es bloque del evento", async () => {
-    await expectError(createMeeting(ctx, input({ time: "10:15" })), "INVALID");
+    await expectError(book({ time: "10:15" }), "INVALID");
   });
 
   it("rechaza un correo inválido y lo indica en el campo", async () => {
-    const err = await expectError(createMeeting(ctx, input({ requesterEmail: "no-es-correo" })), "INVALID");
+    const err = await expectError(book({ requesterEmail: "no-es-correo" }), "INVALID");
     expect(err.fields?.requesterEmail).toBeTruthy();
   });
 
   it("rechaza que el correo de la otra persona sea el mismo que el de quien agenda", async () => {
-    const err = await expectError(createMeeting(ctx, input({ guestEmail: "camila@ejemplo.cl" })), "INVALID");
+    const err = await expectError(book({ guestEmail: "camila@ejemplo.cl" }), "INVALID");
     expect(err.fields?.guestEmail).toBeTruthy();
   });
 
   it("exige un título de al menos 3 caracteres", async () => {
-    const err = await expectError(createMeeting(ctx, input({ title: "ab" })), "INVALID");
+    const err = await expectError(book({ title: "ab" }), "INVALID");
     expect(err.fields?.title).toBeTruthy();
   });
 });
@@ -129,39 +138,39 @@ describe("validaciones", () => {
 describe("bloqueos", () => {
   it("no permite reservar un horario bloqueado", async () => {
     await blockSlot(ctx, { date: DAY, time: time(2), reason: "Pausa de publicidad" });
-    await expectError(createMeeting(ctx, input({ time: time(2) })), "CONFLICT");
+    await expectError(book({ time: time(2) }), "CONFLICT");
   });
 
   it("no permite bloquear un horario que ya tiene reunión", async () => {
-    await createMeeting(ctx, input({ time: time(3) }));
+    await book({ time: time(3) });
     await expect(blockSlot(ctx, { date: DAY, time: time(3), reason: "Publicidad" })).rejects.toBeInstanceOf(BookingError);
   });
 
   it("al liberar el bloqueo el horario vuelve a estar disponible", async () => {
     const block = await blockSlot(ctx, { date: DAY, time: time(4), reason: "Mantención" });
     await unblockSlot(ctx, block.id);
-    const { meeting } = await createMeeting(ctx, input({ time: time(4) }));
+    const { meeting } = await book({ time: time(4) });
     expect(meeting.time).toBe(time(4));
   });
 });
 
 describe("cancelación y edición", () => {
   it("cancelar libera el horario", async () => {
-    const { meeting } = await createMeeting(ctx, input());
+    const { meeting } = await book();
     await cancelMeeting(ctx, meeting.id);
-    const again = await createMeeting(ctx, input());
+    const again = await book();
     expect(again.meeting.time).toBe(time(0));
     expect((await listAgenda(ctx, { full: true })).meetings).toHaveLength(1);
   });
 
   it("editar una reunión a un horario ocupado falla", async () => {
-    await createMeeting(ctx, input({ time: time(0) }));
-    const { meeting } = await createMeeting(ctx, input({ time: time(1), targetCompanyId: "empresa-d" }));
+    await book({ time: time(0) });
+    const { meeting } = await book({ time: time(1), targetCompanyId: "empresa-d" });
     await expectError(updateMeeting(ctx, meeting.id, input({ time: time(0), targetCompanyId: "empresa-d" })), "CONFLICT");
   });
 
   it("editar una reunión a un horario libre la mueve", async () => {
-    const { meeting } = await createMeeting(ctx, input({ time: time(0) }));
+    const { meeting } = await book({ time: time(0) });
     const updated = await updateMeeting(ctx, meeting.id, input({ time: time(5), title: "Nuevo título" }));
     expect(updated.time).toBe(time(5));
     expect((await listAgenda(ctx, { full: true })).meetings[0].title).toBe("Nuevo título");
@@ -291,12 +300,39 @@ describe("inicio de sesión del personal", () => {
 
 describe("agenda pública", () => {
   it("no muestra nombres ni correos de quien agendó", async () => {
-    await createMeeting(ctx, input({ guestEmail: "gerencia@ejemplo.cl" }));
-    const pub = (await listAgenda(ctx, { full: false })).meetings[0];
+    await book({ guestEmail: "gerencia@ejemplo.cl" });
+    const pub = (await listAgenda(ctx, { full: false, viewerId: creator })).meetings[0];
     expect(pub.requesterEmail).toBe("");
     expect(pub.requesterName).toBe("");
     expect(pub.guestEmail).toBeUndefined();
-    expect(pub.title).toBe("Presentación de catálogo");
+  });
+
+  it("el título solo lo ve quien creó la reunión", async () => {
+    await book();
+    const [meeting] = (await listAgenda(ctx, { full: false, viewerId: creator })).meetings;
+    expect(meeting.mine).toBe(true);
+    expect(meeting.title).toBe("Presentación de catálogo");
+  });
+
+  it("otra persona de la misma empresa tampoco ve el título", async () => {
+    await book();
+    const colleague = (await createStaffUser(ctx, { name: "Luis Soto", email: "luis@empresa.cl", username: "luis", password: "clave-segura-2026", companyId: "empresa-a" })).id;
+    const [meeting] = (await listAgenda(ctx, { full: false, viewerId: colleague })).meetings;
+    expect(meeting.mine).toBe(false);
+    expect(meeting.title).toBe("");
+  });
+
+  it("sin sesión no llega ningún título", async () => {
+    await book();
+    const [meeting] = (await listAgenda(ctx, { full: false })).meetings;
+    expect(meeting.mine).toBe(false);
+    expect(meeting.title).toBe("");
+  });
+
+  it("el admin ve todos los títulos", async () => {
+    await book();
+    const [meeting] = (await listAgenda(ctx, { full: true })).meetings;
+    expect(meeting.title).toBe("Presentación de catálogo");
   });
 
   it("la agenda incluye los bloqueos", async () => {

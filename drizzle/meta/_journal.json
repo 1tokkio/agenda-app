@@ -36,6 +36,13 @@
       "when": 1793257368253,
       "tag": "0004_staff_accounts_in_supabase",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793262652096,
+      "tag": "0005_booking_creator",
+      "breakpoints": true
     }
   ]
 }

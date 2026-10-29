@@ -4,7 +4,7 @@
  * Se puede ejecutar varias veces: lo que ya existe o choca se omite.
  */
 import { closeDb, getDb } from "../src/db/client";
-import { BookingError, blockSlot, createMeeting, createStaffUser, listAgenda, type BookingContext } from "../src/lib/bookings";
+import { BookingError, blockSlot, createMeeting, createStaffUser, listAgenda, listStaffUsers, type BookingContext } from "../src/lib/bookings";
 import type { BookingInput } from "../src/lib/booking-rules";
 import { supabaseAccounts } from "../src/lib/account-provider";
 import { config } from "../src/lib/config";
@@ -61,10 +61,24 @@ const users = [
 async function main() {
   const ctx: BookingContext = { db: await getDb(), cfg: config, mail: { name: "silencioso", async send() {} }, accounts: supabaseAccounts() };
 
+  let usersAdded = 0;
+  for (const u of users) {
+    try {
+      await createStaffUser(ctx, u);
+      usersAdded++;
+    } catch (err) {
+      if (!(err instanceof BookingError)) throw err;
+    }
+  }
+
+  // Las reuniones de demostración quedan a nombre de Ana (la base ya la tiene si el script se corre de nuevo).
+  const creator = (await listStaffUsers(ctx)).find((u) => u.username === "ana.perez");
+  if (!creator) throw new Error("No existe el usuario de demostración ana.perez");
+
   let meetingsAdded = 0;
   for (const m of meetings) {
     try {
-      await createMeeting(ctx, m);
+      await createMeeting(ctx, m, creator.id);
       meetingsAdded++;
     } catch (err) {
       if (!(err instanceof BookingError)) throw err;
@@ -78,16 +92,6 @@ async function main() {
     try {
       await blockSlot(ctx, b);
       blocksAdded++;
-    } catch (err) {
-      if (!(err instanceof BookingError)) throw err;
-    }
-  }
-
-  let usersAdded = 0;
-  for (const u of users) {
-    try {
-      await createStaffUser(ctx, u);
-      usersAdded++;
     } catch (err) {
       if (!(err instanceof BookingError)) throw err;
     }

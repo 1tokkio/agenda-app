@@ -68,6 +68,8 @@ export const bookings = pgTable(
     requesterCompany: text("requester_company").notNull(),
     requesterEmail: text("requester_email").notNull(),
     guestEmail: text("guest_email"),
+    // Usuario que creó la reunión: solo él ve el título en la agenda. Null en reuniones anteriores.
+    createdBy: text("created_by").references(() => staffUsers.id, { onDelete: "set null" }),
     startsAt: instant("starts_at").notNull(),
     endsAt: instant("ends_at").notNull(),
     status: text("status", { enum: ["confirmed", "cancelled"] })

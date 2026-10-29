@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Agenda de reuniones — Escritorio</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600&amp;family=Outfit:wght@300;400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Manrope',system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+.af{--bg:#F6F7F9;--surface:#FFFFFF;--surface-2:#F9FAFB;--border:#E4E7EC;--border-soft:#EEF0F3;--text:#101828;--text-2:#344054;--muted:#5D6B82;--brand:#1F4FD1;--brand-ink:#FFFFFF;--brand-soft:#EEF3FF;--brand-text:#1E3A8A;--own-bg:#EAF0FF;--own-bd:#B9CCFD;--taken-bg:#F2F4F7;--taken-bd:#E4E7EC;--hatch-a:#F2F4F7;--hatch-b:#FAFBFC;--off-a:#F7F8FA;--off-b:#FFFFFF;--now:#E8590C;--ok:#067647;--ok-soft:#ECFDF3}
+.af.dark{--bg:#0C0E12;--surface:#13161B;--surface-2:#191D23;--border:#262B33;--border-soft:#1F232A;--text:#F2F4F7;--text-2:#CED4DC;--muted:#97A1AF;--brand:#3563E9;--brand-ink:#FFFFFF;--brand-soft:#17223F;--brand-text:#AFC5FF;--own-bg:#18264A;--own-bd:#2D4A93;--taken-bg:#1C2027;--taken-bd:#2A2F38;--hatch-a:#171A20;--hatch-b:#1C2027;--off-a:#111418;--off-b:#15181D;--now:#FF8A4C;--ok:#47CD89;--ok-soft:#0F2A1D}
+.af *{box-sizing:border-box}
+.af button{font-family:inherit}
+.display{font-family:'Outfit',system-ui,sans-serif;letter-spacing:-.01em}
+.hatch{background:repeating-linear-gradient(135deg,var(--hatch-a) 0 6px,var(--hatch-b) 6px 12px)}
+.col-off{background:repeating-linear-gradient(135deg,var(--off-a) 0 6px,var(--off-b) 6px 12px)}
+.slot-free{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;height:100%;border:0;border-radius:8px;background:transparent;cursor:pointer;color:var(--brand-text);font-size:12px;font-weight:500}
+.slot-free .plus{opacity:0;transition:opacity .12s}
+.slot-free:hover{background:var(--brand-soft)}
+.slot-free:hover .plus,.slot-free:focus-visible .plus{opacity:1}
+.slot-free:focus-visible{outline:2px solid var(--brand);outline-offset:-2px}
+.iconbtn{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text-2);cursor:pointer}
+.iconbtn:hover{background:var(--surface-2)}
+.iconbtn:disabled{opacity:.45;cursor:not-allowed}
+.btn{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 14px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text-2);font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap}
+.btn:hover{background:var(--surface-2)}
+.btn-primary{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.btn-primary:hover{background:var(--brand);filter:brightness(1.08)}
+.seg{height:32px;padding:0 14px;border:0;border-radius:8px;background:transparent;color:var(--muted);font-size:13px;font-weight:500;cursor:pointer}
+.seg.is-active{background:var(--surface);color:var(--text);box-shadow:0 1px 2px rgba(16,24,40,.08),0 0 0 1px var(--border)}
+.nav-item{display:flex;align-items:center;gap:12px;height:42px;padding:0 12px;border-radius:10px;color:var(--text-2);font-size:14px;font-weight:500;text-decoration:none}
+.nav-item.is-active{background:var(--brand-soft);color:var(--brand-text)}
+.field{width:100%;height:44px;padding:0 14px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:14px;font-family:inherit}
+.field:focus{outline:2px solid var(--brand);outline-offset:-1px}
+.ellipsis{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+a{color:var(--brand)}a:hover{color:var(--brand-text)}
+</style>
+</helmet>
+<div class="{{rootClass}}" style="min-height: 1180px; display: flex; flex-wrap: wrap; background: var(--bg); color: var(--text); font-family: 'Manrope', system-ui, sans-serif">
+
+  <aside aria-label="Navegación principal" style="flex: 0 0 {{sideW}}px; display: flex; flex-direction: column; gap: 28px; padding: 20px 14px; background: var(--surface); border-right: 1px solid var(--border)">
+    <div style="display: flex; align-items: center; gap: 12px; padding: 0 4px; min-height: 40px">
+      <div style="flex: 0 0 40px; width: 40px; height: 40px; border-radius: 11px; background: #0B3A8C; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; letter-spacing: .02em">AF</div>
+      <sc-if value="{{expanded}}" hint-placeholder-val="{{ true }}">
+        <div style="display: flex; flex-direction: column; min-width: 0">
+          <span class="display" style="font-size: 17px; font-weight: 500; color: var(--text)">AgendaFinlandia</span>
+          <span style="font-size: 11px; font-weight: 500; letter-spacing: .12em; color: var(--muted)">EXPOCORMA 2026</span>
+        </div>
+      </sc-if>
+    </div>
+    <nav style="display: flex; flex-direction: column; gap: 4px">
+      <sc-if value="{{expanded}}" hint-placeholder-val="{{ true }}">
+        <span style="padding: 0 12px 6px; font-size: 11px; font-weight: 500; letter-spacing: .08em; color: var(--muted)">MENÚ</span>
+      </sc-if>
+      <a href="#agenda" class="nav-item is-active" aria-current="page" aria-label="Agenda">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4.5" width="18" height="16" rx="2.5"></rect><path d="M8 2.5v4M16 2.5v4M3 10h18"></path></svg>
+        <sc-if value="{{expanded}}" hint-placeholder-val="{{ true }}"><span>Agenda</span></sc-if>
+      </a>
+    </nav>
+    <div style="flex: 1 1 auto"></div>
+    <sc-if value="{{expanded}}" hint-placeholder-val="{{ true }}">
+      <div style="padding: 16px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px">
+        <span style="font-size: 13px; font-weight: 600; color: var(--text)">Expocorma 2026</span>
+        <span style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4.5" width="18" height="16" rx="2.5"></rect><path d="M8 2.5v4M16 2.5v4M3 10h18"></path></svg>
+          18 – 20 nov · 10:00 – 19:00
+        </span>
+        <span style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.1-7-11.5A7 7 0 0 1 19 9.5C19 14.9 12 21 12 21z"></path><circle cx="12" cy="9.5" r="2.5"></circle></svg>
+          [UBICACIÓN DE LA SALA]
+        </span>
+      </div>
+    </sc-if>
+  </aside>
+
+  <div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column">
+    <header style="height: 68px; display: flex; align-items: center; gap: 16px; padding: 0 32px; background: var(--surface); border-bottom: 1px solid var(--border)">
+      <button class="iconbtn" type="button" aria-label="Mostrar u ocultar menú" onClick="{{toggleSide}}">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>
+      </button>
+      <div style="display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--muted)">
+        <span>Expocorma 2026</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
+        <span style="font-weight: 500; color: var(--text)">Agenda</span>
+      </div>
+      <div style="flex: 1 1 auto"></div>
+      <button class="iconbtn" type="button" aria-label="Cambiar tema claro u oscuro" onClick="{{toggleTheme}}">
+        <sc-if value="{{isLight}}" hint-placeholder-val="{{ true }}">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"></path></svg>
+        </sc-if>
+        <sc-if value="{{isDark}}" hint-placeholder-val="{{ false }}">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>
+        </sc-if>
+      </button>
+      <div style="width: 1px; height: 28px; background: var(--border)"></div>
+      <div style="display: flex; align-items: center; gap: 12px">
+        <div style="width: 38px; height: 38px; border-radius: 50%; background: var(--brand-soft); color: var(--brand-text); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600">E</div>
+        <div style="display: flex; flex-direction: column; line-height: 1.3">
+          <span style="font-size: 14px; font-weight: 500; color: var(--text)">Emanuel</span>
+          <span style="font-size: 12px; color: var(--muted)">Empresa A · emanuel@correo.cl</span>
+        </div>
+      </div>
+      <button class="btn" type="button">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l-5-5 5-5M5 12h11"></path></svg>
+        Cerrar sesión
+      </button>
+    </header>
+
+    <main id="agenda" style="flex: 1 1 auto; padding: 32px 40px 48px; display: flex; flex-direction: column; gap: 24px">
+      <div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px">
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <h1 class="display" style="margin: 0; font-size: 34px; line-height: 1.15; font-weight: 400; letter-spacing: -.02em; color: var(--text)">Agenda de reuniones</h1>
+          <p style="margin: 0; font-size: 15px; color: var(--muted)">Reserva bloques de 30 minutos en la sala durante los 3 días del evento.</p>
+        </div>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap">
+          <div style="display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 14px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); font-size: 14px; color: var(--text-2)">
+            <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--ok)"></span>
+            <span><b style="color: var(--text)">{{freeTotal}}</b> bloques libres</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 14px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); font-size: 14px; color: var(--text-2)">
+            <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--brand)"></span>
+            <span><b style="color: var(--text)">{{myCount}}</b> reuniones de tu empresa</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start">
+        <section aria-label="Calendario" style="flex: 999 1 720px; min-width: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; box-shadow: 0 1px 2px rgba(16,24,40,.04)">
+          <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 20px; border-bottom: 1px solid var(--border)">
+            <div style="display: flex; align-items: center; gap: 14px">
+              <div style="width: 56px; border-radius: 10px; border: 1px solid var(--border); overflow: hidden; text-align: center">
+                <div style="padding: 3px 0; font-size: 11px; font-weight: 600; letter-spacing: .08em; color: var(--muted); background: var(--surface-2); border-bottom: 1px solid var(--border)">NOV</div>
+                <div class="display" style="padding: 3px 0 4px; font-size: 22px; font-weight: 500; color: var(--brand)">18</div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 2px">
+                <span class="display" style="font-size: 20px; font-weight: 500; color: var(--text)">{{rangeTitle}}</span>
+                <span style="font-size: 13px; color: var(--muted)">{{rangeSub}}</span>
+              </div>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px">
+              <div role="group" aria-label="Rango visible" style="display: flex; gap: 2px; padding: 3px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--border)">
+                <button type="button" class="{{segEvento}}" onClick="{{setEvento}}">3 días</button>
+                <button type="button" class="{{segSemana}}" onClick="{{setSemana}}">Semana</button>
+              </div>
+              <div style="display: flex; align-items: center; gap: 6px">
+                <button class="iconbtn" type="button" aria-label="Semana anterior" disabled="disabled">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
+                </button>
+                <button class="btn" type="button">Hoy</button>
+                <button class="iconbtn" type="button" aria-label="Semana siguiente" disabled="disabled">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
+                </button>
+              </div>
+              <button class="btn btn-primary" type="button" onClick="{{openFirst}}">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+                Agendar reunión
+              </button>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-wrap: wrap; gap: 20px; padding: 12px 20px; border-bottom: 1px solid var(--border); font-size: 13px; color: var(--text-2)">
+            <span style="display: flex; align-items: center; gap: 8px"><span style="width: 14px; height: 14px; border-radius: 4px; border: 1.5px dashed var(--brand)"></span>Disponible</span>
+            <span style="display: flex; align-items: center; gap: 8px"><span style="width: 14px; height: 14px; border-radius: 4px; background: var(--own-bg); border: 1px solid var(--own-bd)"></span>Tu empresa</span>
+            <span style="display: flex; align-items: center; gap: 8px"><span style="width: 14px; height: 14px; border-radius: 4px; background: var(--taken-bg); border: 1px solid var(--taken-bd)"></span>Reservado</span>
+            <span style="display: flex; align-items: center; gap: 8px"><span class="hatch" style="width: 14px; height: 14px; border-radius: 4px; border: 1px solid var(--border)"></span>No disponible</span>
+          </div>
+
+          <div style="overflow-x: auto">
+            <div style="min-width: {{gridMin}}px">
+              <div style="display: flex; border-bottom: 1px solid var(--border); background: var(--surface)">
+                <div style="flex: 0 0 76px; display: flex; align-items: flex-end; justify-content: flex-end; padding: 0 12px 12px; font-size: 11px; color: var(--muted)">GMT-3</div>
+                <sc-for list="{{days}}" as="day" hint-placeholder-count="3">
+                  <div style="flex: {{day.flex}}; min-width: 0; padding: 12px 14px; border-left: 1px solid var(--border); display: flex; align-items: center; gap: 12px">
+                    <div class="{{day.numClass}}" style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 400; background: {{day.numBg}}; color: {{day.numColor}}">{{day.num}}</div>
+                    <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+                      <span style="font-size: 13px; font-weight: 500; color: {{day.labelColor}}">{{day.short}}</span>
+                      <span class="ellipsis" style="font-size: 12px; color: var(--muted)">{{day.freeLabel}}</span>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="display: flex">
+                <div style="flex: 0 0 76px">
+                  <sc-for list="{{times}}" as="t" hint-placeholder-count="18">
+                    <div style="height: 52px; padding: 6px 12px 0 0; text-align: right; font-size: 12px; font-weight: 500; color: var(--muted); font-variant-numeric: tabular-nums">{{t}}</div>
+                  </sc-for>
+                </div>
+                <sc-for list="{{days}}" as="day" hint-placeholder-count="3">
+                  <div class="{{day.colClass}}" style="flex: {{day.flex}}; min-width: 0; position: relative; border-left: 1px solid var(--border)">
+                    <sc-for list="{{day.slots}}" as="s" hint-placeholder-count="18">
+                      <div style="height: 52px; padding: 4px 6px; border-top: 1px solid var(--border-soft)">
+                        <sc-if value="{{s.isFree}}" hint-placeholder-val="{{ true }}">
+                          <button type="button" class="slot-free" aria-label="{{s.aria}}" onClick="{{s.pick}}">
+                            <span class="plus" style="display: inline-flex; align-items: center; gap: 6px">
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+                              Agendar {{s.time}}
+                            </span>
+                          </button>
+                        </sc-if>
+                        <sc-if value="{{s.isOwn}}" hint-placeholder-val="{{ false }}">
+                          <div style="height: 100%; padding: 5px 10px; border-radius: 8px; background: var(--own-bg); border: 1px solid var(--own-bd); display: flex; flex-direction: column; justify-content: center; min-width: 0">
+                            <span class="ellipsis" style="font-size: 12px; font-weight: 500; color: var(--brand-text)">{{s.title}}</span>
+                            <span style="font-size: 11px; color: var(--brand-text); font-variant-numeric: tabular-nums">{{s.range}}</span>
+                          </div>
+                        </sc-if>
+                        <sc-if value="{{s.isTaken}}" hint-placeholder-val="{{ false }}">
+                          <div style="height: 100%; padding: 5px 10px; border-radius: 8px; background: var(--taken-bg); border: 1px solid var(--taken-bd); display: flex; flex-direction: column; justify-content: center; min-width: 0">
+                            <span style="font-size: 12px; font-weight: 500; color: var(--text-2)">Reservado</span>
+                            <span style="font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums">{{s.range}}</span>
+                          </div>
+                        </sc-if>
+                        <sc-if value="{{s.isBlocked}}" hint-placeholder-val="{{ false }}">
+                          <div class="hatch" style="height: 100%; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; color: var(--muted)">No disponible</div>
+                        </sc-if>
+                      </div>
+                    </sc-for>
+                    <sc-if value="{{day.showNow}}" hint-placeholder-val="{{ false }}">
+                      <div aria-hidden="true" style="position: absolute; left: -5px; right: 0; top: {{nowTop}}px; display: flex; align-items: center; pointer-events: none">
+                        <span style="width: 10px; height: 10px; border-radius: 50%; background: var(--now)"></span>
+                        <span style="flex: 1 1 auto; height: 2px; background: var(--now)"></span>
+                      </div>
+                    </sc-if>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <aside aria-label="Resumen" style="flex: 1 1 320px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+          <div style="padding: 20px; border-radius: 16px; background: var(--surface); border: 1px solid var(--border); display: flex; flex-direction: column; gap: 14px">
+            <span style="font-size: 12px; font-weight: 600; letter-spacing: .08em; color: var(--muted)">PRÓXIMA REUNIÓN</span>
+            <sc-if value="{{hasNext}}" hint-placeholder-val="{{ true }}">
+              <div style="display: flex; flex-direction: column; gap: 6px">
+                <span class="display" style="font-size: 21px; font-weight: 400; color: var(--text)">{{next.title}}</span>
+                <span style="display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text-2)">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
+                  {{next.when}}
+                </span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 10px; background: var(--brand-soft); color: var(--brand-text); font-size: 13px; font-weight: 500">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.1-7-11.5A7 7 0 0 1 19 9.5C19 14.9 12 21 12 21z"></path><circle cx="12" cy="9.5" r="2.5"></circle></svg>
+                Sala de reuniones · Expocorma 2026
+              </div>
+            </sc-if>
+          </div>
+
+          <div style="padding: 20px; border-radius: 16px; background: var(--surface); border: 1px solid var(--border); display: flex; flex-direction: column; gap: 4px">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px">
+              <span class="display" style="font-size: 18px; font-weight: 500; color: var(--text)">Mis reuniones</span>
+              <span style="padding: 2px 10px; border-radius: 999px; background: var(--brand-soft); color: var(--brand-text); font-size: 12px; font-weight: 600">{{myCount}}</span>
+            </div>
+            <sc-for list="{{mine}}" as="m" hint-placeholder-count="3">
+              <div style="display: flex; gap: 14px; align-items: center; padding: 12px 0; border-top: 1px solid var(--border-soft)">
+                <div style="flex: 0 0 48px; text-align: center; display: flex; flex-direction: column">
+                  <span style="font-size: 11px; font-weight: 600; color: var(--muted)">{{m.dow}}</span>
+                  <span class="display" style="font-size: 22px; font-weight: 400; color: var(--text)">{{m.num}}</span>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+                  <span class="ellipsis" style="font-size: 14px; font-weight: 500; color: var(--text)">{{m.title}}</span>
+                  <span style="font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums">{{m.range}}</span>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="padding: 20px; border-radius: 16px; background: var(--surface); border: 1px solid var(--border); display: flex; flex-direction: column; gap: 16px">
+            <span class="display" style="font-size: 18px; font-weight: 500; color: var(--text)">Ocupación de la sala</span>
+            <sc-for list="{{occ}}" as="o" hint-placeholder-count="3">
+              <div style="display: flex; flex-direction: column; gap: 8px">
+                <div style="display: flex; justify-content: space-between; font-size: 13px">
+                  <span style="color: var(--text-2); font-weight: 500">{{o.label}}</span>
+                  <span style="color: var(--muted); font-variant-numeric: tabular-nums">{{o.pct}}% · {{o.free}} libres</span>
+                </div>
+                <div style="height: 8px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border-soft); overflow: hidden">
+                  <div style="width: {{o.pct}}%; height: 100%; border-radius: 999px; background: var(--brand)"></div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <sc-if value="{{hasSel}}" hint-placeholder-val="{{ false }}">
+    <div style="position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(10,13,18,.55)">
+      <div role="dialog" aria-modal="true" aria-labelledby="dlg-title" style="width: 100%; max-width: 480px; border-radius: 16px; background: var(--surface); border: 1px solid var(--border); box-shadow: 0 24px 48px -12px rgba(16,24,40,.25); overflow: hidden">
+        <div style="padding: 24px 24px 0; display: flex; flex-direction: column; gap: 6px">
+          <h2 id="dlg-title" class="display" style="margin: 0; font-size: 22px; font-weight: 500; color: var(--text)">Agendar reunión</h2>
+          <p style="margin: 0; font-size: 14px; color: var(--muted)">Confirma el bloque y con quién te reunirás.</p>
+        </div>
+        <div style="margin: 20px 24px 0; padding: 14px 16px; border-radius: 12px; background: var(--brand-soft); display: flex; flex-direction: column; gap: 4px">
+          <span style="font-size: 15px; font-weight: 600; color: var(--brand-text)">{{selDay}}</span>
+          <span style="font-size: 14px; color: var(--brand-text); font-variant-numeric: tabular-nums">{{selRange}} · 30 min · Sala de reuniones</span>
+        </div>
+        <div style="padding: 20px 24px; display: flex; flex-direction: column; gap: 16px">
+          <label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 500; color: var(--text-2)">
+            Empresa con la que te reúnes
+            <input class="field" type="text" placeholder="Ej.: Empresa C" value="{{withCo}}" onInput="{{onWith}}">
+          </label>
+          <label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 500; color: var(--text-2)">
+            Asunto (opcional)
+            <input class="field" type="text" placeholder="Ej.: Presentación de producto" value="{{subject}}" onInput="{{onSubject}}">
+          </label>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 12px; padding: 16px 24px; border-top: 1px solid var(--border); background: var(--surface-2)">
+          <button class="btn" type="button" onClick="{{closeModal}}">Cancelar</button>
+          <button class="btn btn-primary" type="button" onClick="{{confirm}}">Confirmar reserva</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false,"section":"Vista"},"rango":{"editor":"enum","options":["evento","semana"],"default":"evento","section":"Vista"},"ahora":{"editor":"boolean","default":true,"section":"Vista"},"$preview":{"width":1920,"height":1180}}'>
+var fmt = function (m) { return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
+var TIMES = []; for (var m = 600; m < 1140; m += 30) { TIMES.push(fmt(m)); }
+var DAYS = [
+  { id: 16, short: 'Lunes', dow: 'LUN', on: false },
+  { id: 17, short: 'Martes', dow: 'MAR', on: false },
+  { id: 18, short: 'Miércoles', dow: 'MIÉ', on: true },
+  { id: 19, short: 'Jueves', dow: 'JUE', on: true, today: true },
+  { id: 20, short: 'Viernes', dow: 'VIE', on: true },
+  { id: 21, short: 'Sábado', dow: 'SÁB', on: false },
+  { id: 22, short: 'Domingo', dow: 'DOM', on: false }
+];
+var OWN = { '18-11:00': 'Reunión con Empresa C', '19-15:30': 'Reunión con Empresa F', '20-10:00': 'Reunión con Empresa D' };
+var TAKEN = ['18-10:00', '18-12:00', '18-14:30', '18-16:30', '18-17:00', '19-10:30', '19-11:00', '19-12:00', '19-16:00', '19-17:30', '20-11:30', '20-14:30', '20-15:00', '20-16:00'];
+var BLOCKED = ['18-13:00', '18-13:30', '19-13:00', '19-13:30', '20-13:00', '20-13:30', '20-18:30'];
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { dark: null, range: null, collapsed: false, sel: null, withCo: '', subject: '', added: {} };
+  }
+  renderVals() {
+    var self = this, s = this.state, p = this.props;
+    var dark = s.dark !== null ? s.dark : !!p.dark;
+    var range = s.range || p.rango || 'evento';
+    var showNow = p.ahora !== undefined ? !!p.ahora : true;
+    var own = Object.assign({}, OWN, s.added);
+    var all = DAYS.map(function (d) {
+      var slots = TIMES.map(function (t, i) {
+        var key = d.id + '-' + t;
+        var isOff = !d.on;
+        var ownT = own[key];
+        var isOwn = !isOff && !!ownT;
+        var isTaken = !isOff && !isOwn && TAKEN.indexOf(key) >= 0;
+        var isBlocked = !isOff && !isOwn && !isTaken && BLOCKED.indexOf(key) >= 0;
+        var isFree = !isOff && !isOwn && !isTaken && !isBlocked;
+        return {
+          key: key, time: t, range: t + ' – ' + fmt(600 + i * 30 + 30), title: ownT || '',
+          isOff: isOff, isOwn: isOwn, isTaken: isTaken, isBlocked: isBlocked, isFree: isFree,
+          aria: 'Agendar ' + d.short + ' ' + d.id + ' a las ' + t,
+          pick: function () { self.setState({ sel: { day: d.id, i: i }, withCo: '', subject: '' }); }
+        };
+      });
+      var free = slots.filter(function (x) { return x.isFree; }).length;
+      var used = slots.filter(function (x) { return x.isOwn || x.isTaken; }).length;
+      var blocked = slots.filter(function (x) { return x.isBlocked; }).length;
+      var isToday = !!d.today;
+      return {
+        id: d.id, on: d.on, short: d.short + (isToday ? ' · Hoy' : ''), dow: d.dow, num: d.id, slots: slots,
+        free: free, pct: d.on ? Math.round(used / (18 - blocked) * 100) : 0,
+        freeLabel: d.on ? free + ' bloques libres' : 'Sin agenda',
+        flex: d.on ? '1 1 0' : '0.55 1 0',
+        colClass: d.on ? '' : 'col-off',
+        numClass: 'display',
+        numBg: isToday ? 'var(--brand)' : 'transparent',
+        numColor: isToday ? 'var(--brand-ink)' : (d.on ? 'var(--text)' : 'var(--muted)'),
+        labelColor: d.on ? 'var(--text)' : 'var(--muted)',
+        showNow: isToday && showNow
+      };
+    });
+    var days = all.filter(function (d) { return range === 'semana' || d.on; });
+    var evDays = all.filter(function (d) { return d.on; });
+    var mine = [];
+    evDays.forEach(function (d) { d.slots.forEach(function (x) { if (x.isOwn) mine.push({ dow: d.dow, num: d.num, title: x.title, range: x.range, when: d.dow.charAt(0) + d.dow.slice(1).toLowerCase() + ' ' + d.num + ' nov · ' + x.range }); }); });
+    var sel = s.sel, selDay = '', selRange = '';
+    if (sel) {
+      var sd = DAYS.filter(function (d) { return d.id === sel.day; })[0];
+      selDay = sd.short + ' ' + sd.id + ' de noviembre';
+      selRange = TIMES[sel.i] + ' – ' + fmt(600 + sel.i * 30 + 30);
+    }
+    return {
+      rootClass: dark ? 'af dark' : 'af',
+      isDark: dark, isLight: !dark,
+      expanded: !s.collapsed, sideW: s.collapsed ? 76 : 264,
+      days: days, times: TIMES, nowTop: 4 + (100 / 30) * 52,
+      gridMin: range === 'semana' ? 1040 : 640,
+      rangeTitle: range === 'semana' ? '16 – 22 de noviembre, 2026' : '18 – 20 de noviembre, 2026',
+      rangeSub: range === 'semana' ? 'Semana 47 · agenda habilitada mié a vie' : 'Expocorma 2026 · 3 días de evento',
+      segEvento: range === 'evento' ? 'seg is-active' : 'seg',
+      segSemana: range === 'semana' ? 'seg is-active' : 'seg',
+      freeTotal: evDays.reduce(function (a, d) { return a + d.free; }, 0),
+      myCount: mine.length, mine: mine, hasNext: mine.length > 0,
+      next: mine[0] || { title: '', when: '' },
+      occ: evDays.map(function (d) { return { label: d.short.replace(' · Hoy', '') + ' ' + d.num, pct: d.pct, free: d.free }; }),
+      hasSel: !!sel, selDay: selDay, selRange: selRange, withCo: s.withCo, subject: s.subject,
+      toggleSide: function () { self.setState({ collapsed: !s.collapsed }); },
+      toggleTheme: function () { self.setState({ dark: !dark }); },
+      setEvento: function () { self.setState({ range: 'evento' }); },
+      setSemana: function () { self.setState({ range: 'semana' }); },
+      openFirst: function () {
+        for (var di = 0; di < evDays.length; di++) { for (var si = 0; si < 18; si++) { if (evDays[di].slots[si].isFree) { self.setState({ sel: { day: evDays[di].id, i: si }, withCo: '', subject: '' }); return; } } }
+      },
+      closeModal: function () { self.setState({ sel: null }); },
+      onWith: function (e) { self.setState({ withCo: e.target.value }); },
+      onSubject: function (e) { self.setState({ subject: e.target.value }); },
+      confirm: function () {
+        if (!sel) return;
+        var key = sel.day + '-' + TIMES[sel.i];
+        var t = s.subject ? s.subject : ('Reunión con ' + (s.withCo || 'empresa por confirmar'));
+        var add = Object.assign({}, s.added); add[key] = t;
+        self.setState({ added: add, sel: null });
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>

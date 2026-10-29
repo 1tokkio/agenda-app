@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Panel de organización — iPhone 16</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600&amp;family=Outfit:wght@300;400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Manrope',system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+.af{--bg:#F6F7F9;--surface:#FFFFFF;--surface-2:#F9FAFB;--border:#E4E7EC;--border-soft:#EEF0F3;--text:#101828;--text-2:#344054;--muted:#5D6B82;--brand:#1F4FD1;--brand-ink:#FFFFFF;--brand-soft:#EEF3FF;--brand-text:#1E3A8A;--hatch-a:#F2F4F7;--hatch-b:#FAFBFC;--danger:#B42318;--danger-bd:#FDA29B;--danger-soft:#FEF3F2}
+.af.dark{--bg:#0C0E12;--surface:#13161B;--surface-2:#191D23;--border:#262B33;--border-soft:#1F232A;--text:#F2F4F7;--text-2:#CED4DC;--muted:#97A1AF;--brand:#3563E9;--brand-ink:#FFFFFF;--brand-soft:#17223F;--brand-text:#AFC5FF;--hatch-a:#171A20;--hatch-b:#1C2027;--danger:#F97066;--danger-bd:#7A271A;--danger-soft:#2A1513}
+.co-A{--cbg:#EAF0FF;--cbd:#B9CCFD;--ctx:#1E3A8A}
+.co-B{--cbg:#F1EDFF;--cbd:#D3C7FE;--ctx:#4C2A9E}
+.co-C{--cbg:#E6F6F4;--cbd:#A8DED6;--ctx:#0B5A52}
+.co-D{--cbg:#FFF4E0;--cbd:#F6D193;--ctx:#7A4A00}
+.co-E{--cbg:#FDECF2;--cbd:#F5B9CF;--ctx:#8A1C4A}
+.co-F{--cbg:#E9F7EE;--cbd:#AEDFC0;--ctx:#135C33}
+.af.dark .co-A{--cbg:#18264A;--cbd:#2D4A93;--ctx:#AFC5FF}
+.af.dark .co-B{--cbg:#251C45;--cbd:#4A3790;--ctx:#CDBEFF}
+.af.dark .co-C{--cbg:#0F2B29;--cbd:#1F5A54;--ctx:#8EE0D4}
+.af.dark .co-D{--cbg:#2E2310;--cbd:#6B4E17;--ctx:#F7CF85}
+.af.dark .co-E{--cbg:#33161F;--cbd:#6E2D44;--ctx:#F7AFC8}
+.af.dark .co-F{--cbg:#11281A;--cbd:#275A3A;--ctx:#93DDB0}
+.af *{box-sizing:border-box}
+.af button,.af input,.af select{font-family:inherit}
+.display{font-family:'Outfit',system-ui,sans-serif;letter-spacing:-.01em}
+.hatch{background:repeating-linear-gradient(135deg,var(--hatch-a) 0 6px,var(--hatch-b) 6px 12px)}
+.iconbtn{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:12px;border:0;background:transparent;color:var(--text-2);cursor:pointer}
+.day{flex:1 1 0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;border-radius:12px;border:1px solid transparent;background:transparent;color:var(--text-2);cursor:pointer}
+.day.is-active{background:var(--surface);border-color:var(--border);box-shadow:0 1px 2px rgba(16,24,40,.08);color:var(--text)}
+.row-btn{width:100%;height:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 14px;border-radius:10px;cursor:pointer;text-align:left;min-width:0}
+.free{border:1.5px dashed var(--border);background:transparent;color:var(--muted);font-size:13px;font-weight:500}
+.meet{border:1px solid var(--cbd);background:var(--cbg);color:var(--ctx)}
+.blk{border:1px solid var(--border);color:var(--muted);font-size:13px;font-weight:500}
+.badge{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:999px;background:var(--cbg);color:var(--ctx);border:1px solid var(--cbd);font-size:12px;font-weight:500;white-space:nowrap}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--ctx)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:48px;padding:0 16px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text-2);font-size:15px;font-weight:500;cursor:pointer}
+.btn-primary{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.btn-danger{color:var(--danger);border-color:var(--danger-bd);background:transparent}
+.seg{flex:1 1 0;height:40px;padding:0 10px;border:0;border-radius:9px;background:transparent;color:var(--muted);font-size:14px;font-weight:500;cursor:pointer}
+.seg.is-active{background:var(--surface);color:var(--text);box-shadow:0 1px 2px rgba(16,24,40,.08),0 0 0 1px var(--border)}
+.field{width:100%;height:48px;padding:0 14px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:16px}
+.field:focus{outline:2px solid var(--brand);outline-offset:-1px}
+.lbl{display:flex;flex-direction:column;gap:6px;font-size:14px;font-weight:500;color:var(--text-2)}
+.nav-item{display:flex;align-items:center;gap:12px;width:100%;height:48px;padding:0 14px;border:0;border-radius:12px;background:transparent;color:var(--text-2);font-size:15px;font-weight:500;text-decoration:none;cursor:pointer;text-align:left}
+.nav-item.is-active{background:var(--brand-soft);color:var(--brand-text)}
+.ellipsis{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+a{color:var(--brand)}a:hover{color:var(--brand-text)}
+</style>
+</helmet>
+<div class="{{rootClass}}" style="width: 393px; height: 852px; position: relative; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); color: var(--text); font-family: 'Manrope', system-ui, sans-serif">
+
+  <header style="flex: 0 0 auto; display: flex; align-items: center; gap: 4px; padding: 8px 8px 8px 6px; background: var(--surface); border-bottom: 1px solid var(--border)">
+    <button class="iconbtn" type="button" aria-label="Abrir menú" onClick="{{openMenu}}">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>
+    </button>
+    <div style="display: flex; align-items: center; gap: 10px; flex: 1 1 auto; min-width: 0">
+      <div style="width: 32px; height: 32px; border-radius: 9px; background: #0B3A8C; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 12px">AF</div>
+      <span class="display" style="font-size: 18px; font-weight: 500">Organización</span>
+    </div>
+    <button class="iconbtn" type="button" aria-label="Cambiar tema claro u oscuro" onClick="{{toggleTheme}}">
+      <sc-if value="{{isLight}}" hint-placeholder-val="{{ true }}">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"></path></svg>
+      </sc-if>
+      <sc-if value="{{isDark}}" hint-placeholder-val="{{ false }}">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>
+      </sc-if>
+    </button>
+    <div style="width: 36px; height: 36px; margin: 0 4px; border-radius: 50%; background: var(--brand-soft); color: var(--brand-text); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600">A</div>
+  </header>
+
+  <div style="flex: 1 1 auto; min-height: 0; overflow-y: auto">
+    <sc-if value="{{isCal}}" hint-placeholder-val="{{ true }}">
+      <div style="padding: 18px 16px 12px; display: flex; flex-direction: column; gap: 14px">
+        <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 12px">
+          <div style="display: flex; flex-direction: column; gap: 4px">
+            <h1 class="display" style="margin: 0; font-size: 28px; line-height: 1.15; font-weight: 400; letter-spacing: -.02em">Calendario</h1>
+            <p style="margin: 0; font-size: 14px; color: var(--muted)">Sala de reuniones · 18 – 20 nov</p>
+          </div>
+          <button class="btn" type="button" aria-label="Descargar CSV" style="width: 48px; padding: 0">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"></path></svg>
+          </button>
+        </div>
+        <div role="tablist" aria-label="Día del evento" style="display: flex; gap: 4px; padding: 4px; border-radius: 14px; background: var(--surface-2); border: 1px solid var(--border)">
+          <sc-for list="{{days}}" as="d" hint-placeholder-count="3">
+            <button type="button" role="tab" aria-selected="{{d.sel}}" class="{{d.cls}}" onClick="{{d.pick}}">
+              <span style="font-size: 12px; font-weight: 500; color: var(--muted)">{{d.dow}}</span>
+              <span class="display" style="width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 19px; font-weight: 400; background: {{d.numBg}}; color: {{d.numColor}}">{{d.num}}</span>
+              <span style="font-size: 11px; color: var(--muted)">{{d.n}} reuniones</span>
+            </button>
+          </sc-for>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+          <div style="padding: 14px; border-radius: 14px; background: var(--surface); border: 1px solid var(--border); display: flex; flex-direction: column; gap: 4px">
+            <span style="font-size: 12px; color: var(--muted)">Reuniones</span>
+            <span class="display" style="font-size: 28px; line-height: 1.1; font-weight: 300">{{k.n}}<span style="font-size: 15px; color: var(--muted)"> / 18</span></span>
+          </div>
+          <div style="padding: 14px; border-radius: 14px; background: var(--surface); border: 1px solid var(--border); display: flex; flex-direction: column; gap: 4px">
+            <span style="font-size: 12px; color: var(--muted)">Empresas con reunión</span>
+            <span class="display" style="font-size: 28px; line-height: 1.1; font-weight: 300">{{k.cos}}<span style="font-size: 15px; color: var(--muted)"> / 6</span></span>
+          </div>
+          <div style="padding: 14px; border-radius: 14px; background: var(--surface); border: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px">
+            <span style="font-size: 12px; color: var(--muted)">Ocupación</span>
+            <span class="display" style="font-size: 28px; line-height: 1.1; font-weight: 300">{{k.occ}}%</span>
+            <div style="height: 6px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border-soft); overflow: hidden"><div style="width: {{k.occ}}%; height: 100%; background: var(--brand); border-radius: 999px"></div></div>
+          </div>
+          <div style="padding: 14px; border-radius: 14px; background: var(--surface); border: 1px solid var(--border); display: flex; flex-direction: column; gap: 4px">
+            <span style="font-size: 12px; color: var(--muted)">Bloques libres</span>
+            <span class="display" style="font-size: 28px; line-height: 1.1; font-weight: 300">{{k.free}}</span>
+            <span style="font-size: 12px; color: var(--muted)">{{k.b}} bloqueados</span>
+          </div>
+        </div>
+      </div>
+      <div style="padding: 0 16px 24px">
+        <sc-for list="{{slots}}" as="s" hint-placeholder-count="12">
+          <div style="display: flex; gap: 12px; height: 60px; padding: 4px 0">
+            <div style="flex: 0 0 44px; padding-top: 6px; font-size: 13px; font-weight: 500; color: var(--muted); font-variant-numeric: tabular-nums">{{s.time}}</div>
+            <div style="flex: 1 1 auto; min-width: 0">
+              <sc-if value="{{s.isFree}}" hint-placeholder-val="{{ true }}">
+                <button type="button" class="row-btn free" aria-label="{{s.aria}}" onClick="{{s.pick}}">
+                  <span>Libre</span>
+                  <span style="display: inline-flex; align-items: center; gap: 6px; color: var(--brand-text)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+                    Agendar o bloquear
+                  </span>
+                </button>
+              </sc-if>
+              <sc-if value="{{s.isMeet}}" hint-placeholder-val="{{ false }}">
+                <button type="button" class="{{s.mcls}}" aria-label="{{s.aria}}" onClick="{{s.pick}}">
+                  <span style="display: flex; flex-direction: column; min-width: 0">
+                    <span class="ellipsis" style="font-size: 14px; font-weight: 600">{{s.co}}</span>
+                    <span class="ellipsis" style="font-size: 12px">con {{s.with}}</span>
+                  </span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
+                </button>
+              </sc-if>
+              <sc-if value="{{s.isBlk}}" hint-placeholder-val="{{ false }}">
+                <button type="button" class="row-btn blk hatch" aria-label="{{s.aria}}" onClick="{{s.pick}}">
+                  <span>Bloqueado</span>
+                  <span style="font-size: 12px">Desbloquear</span>
+                </button>
+              </sc-if>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{isUsr}}" hint-placeholder-val="{{ false }}">
+      <div style="padding: 18px 16px 100px; display: flex; flex-direction: column; gap: 14px">
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <h1 class="display" style="margin: 0; font-size: 28px; line-height: 1.15; font-weight: 400; letter-spacing: -.02em">Usuarios</h1>
+          <p style="margin: 0; font-size: 14px; color: var(--muted)">{{userCount}} de 30 usuarios creados</p>
+        </div>
+        <div style="height: 8px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border-soft); overflow: hidden"><div style="width: {{userPct}}%; height: 100%; border-radius: 999px; background: var(--brand)"></div></div>
+        <label style="position: relative; display: block">
+          <span style="position: absolute; left: 14px; top: 15px; color: var(--muted); display: flex">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+          </span>
+          <input class="field" type="search" aria-label="Buscar usuario" placeholder="Buscar por nombre o correo" style="padding-left: 42px" value="{{q}}" onInput="{{onQ}}">
+        </label>
+        <sc-for list="{{userRows}}" as="u" hint-placeholder-count="2">
+          <div style="padding: 14px; border-radius: 14px; background: var(--surface); border: 1px solid var(--border); display: flex; flex-direction: column; gap: 12px">
+            <div style="display: flex; align-items: center; gap: 12px">
+              <span class="{{u.av}}" style="flex: 0 0 40px; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 600; background: var(--cbg); color: var(--ctx); border: 1px solid var(--cbd)">{{u.ini}}</span>
+              <div style="display: flex; flex-direction: column; min-width: 0">
+                <span style="font-size: 15px; font-weight: 500">{{u.name}}</span>
+                <span class="ellipsis" style="font-size: 13px; color: var(--muted)">{{u.email}} · @{{u.user}}</span>
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap">
+              <span class="{{u.badge}}"><span class="dot"></span>Empresa {{u.co}}</span>
+              <span style="display: inline-flex; height: 24px; align-items: center; padding: 0 10px; border-radius: 999px; font-size: 12px; font-weight: 500; background: var(--surface-2); border: 1px solid var(--border); color: var(--text-2)">{{u.role}}</span>
+              <span style="flex: 1 1 auto"></span>
+              <button type="button" class="btn btn-danger" style="height: 40px" aria-label="{{u.aria}}" onClick="{{u.remove}}">Quitar</button>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="position: absolute; left: 16px; right: 16px; bottom: 24px">
+        <button class="btn btn-primary" type="button" style="width: 100%; box-shadow: 0 8px 20px -6px rgba(31,79,209,.45)" onClick="{{openCreate}}">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+          Crear usuario
+        </button>
+      </div>
+    </sc-if>
+  </div>
+
+  <sc-if value="{{menuOpen}}" hint-placeholder-val="{{ false }}">
+    <div style="position: absolute; inset: 0; z-index: 40; display: flex; background: rgba(10,13,18,.5)">
+      <nav aria-label="Navegación principal" style="width: 300px; height: 100%; padding: 20px 14px; background: var(--surface); display: flex; flex-direction: column; gap: 24px">
+        <div style="display: flex; align-items: center; justify-content: space-between">
+          <div style="display: flex; align-items: center; gap: 12px">
+            <div style="width: 40px; height: 40px; border-radius: 11px; background: #0B3A8C; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px">AF</div>
+            <div style="display: flex; flex-direction: column">
+              <span class="display" style="font-size: 17px; font-weight: 500">AgendaFinlandia</span>
+              <span style="font-size: 11px; font-weight: 500; letter-spacing: .12em; color: var(--muted)">EXPOCORMA 2026</span>
+            </div>
+          </div>
+          <button class="iconbtn" type="button" aria-label="Cerrar menú" onClick="{{closeMenu}}">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+          </button>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <span style="padding: 0 14px 6px; font-size: 11px; font-weight: 500; letter-spacing: .08em; color: var(--muted)">ORGANIZACIÓN</span>
+          <button type="button" class="{{navCal}}" onClick="{{goCal}}">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7.5" height="7.5" rx="2"></rect><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"></rect><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"></rect><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2"></rect></svg>
+            Calendario
+          </button>
+          <button type="button" class="{{navUsr}}" onClick="{{goUsr}}">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18.5 14a6 6 0 0 1 3 6"></path></svg>
+            Usuarios
+          </button>
+          <a href="Mobile.dc.html" class="nav-item">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4.5" width="18" height="16" rx="2.5"></rect><path d="M8 2.5v4M16 2.5v4M3 10h18"></path></svg>
+            Agenda pública
+          </a>
+        </div>
+        <div style="flex: 1 1 auto"></div>
+        <div style="display: flex; flex-direction: column; gap: 12px; padding-top: 16px; border-top: 1px solid var(--border)">
+          <div style="display: flex; flex-direction: column">
+            <span style="font-size: 14px; font-weight: 500">Admin</span>
+            <span style="font-size: 13px; color: var(--muted)">admin.agenda@empresa.cl</span>
+          </div>
+          <button class="btn" type="button">Cerrar sesión</button>
+        </div>
+      </nav>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{hasSheet}}" hint-placeholder-val="{{ false }}">
+    <div style="position: absolute; inset: 0; z-index: 50; display: flex; flex-direction: column; justify-content: flex-end; background: rgba(10,13,18,.5)">
+      <div role="dialog" aria-modal="true" aria-labelledby="am-dlg" style="border-radius: 20px 20px 0 0; background: var(--surface); padding: 10px 16px 28px; display: flex; flex-direction: column; gap: 16px">
+        <div style="align-self: center; width: 40px; height: 5px; border-radius: 999px; background: var(--border)"></div>
+        <div style="display: flex; flex-direction: column; gap: 2px">
+          <h2 id="am-dlg" class="display" style="margin: 0; font-size: 22px; font-weight: 500">{{dlgTitle}}</h2>
+          <span style="font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums">{{dlgWhen}}</span>
+        </div>
+
+        <sc-if value="{{modeNew}}" hint-placeholder-val="{{ true }}">
+          <div role="group" aria-label="Acción" style="display: flex; gap: 2px; padding: 3px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--border)">
+            <button type="button" class="{{tabMeet}}" onClick="{{setTabMeet}}">Agendar</button>
+            <button type="button" class="{{tabBlk}}" onClick="{{setTabBlk}}">Bloquear</button>
+          </div>
+          <sc-if value="{{isTabMeet}}" hint-placeholder-val="{{ true }}">
+            <label class="lbl">Empresa que reserva
+              <select class="field" value="{{fCo}}" onChange="{{onFCo}}"><option value="A">Empresa A</option><option value="B">Empresa B</option><option value="C">Empresa C</option><option value="D">Empresa D</option><option value="E">Empresa E</option><option value="F">Empresa F</option></select>
+            </label>
+            <label class="lbl">Se reúne con
+              <select class="field" value="{{fWith}}" onChange="{{onFWith}}"><option value="A">Empresa A</option><option value="B">Empresa B</option><option value="C">Empresa C</option><option value="D">Empresa D</option><option value="E">Empresa E</option><option value="F">Empresa F</option></select>
+            </label>
+            <div style="display: flex; gap: 12px">
+              <button class="btn" type="button" style="flex: 1 1 0" onClick="{{closeSel}}">Cancelar</button>
+              <button class="btn btn-primary" type="button" style="flex: 2 1 0" onClick="{{saveMeet}}">Agendar reunión</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{isTabBlk}}" hint-placeholder-val="{{ false }}">
+            <p style="margin: 0; padding: 14px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--border); font-size: 14px; color: var(--text-2)">El bloque quedará como “No disponible” para todas las empresas.</p>
+            <div style="display: flex; gap: 12px">
+              <button class="btn" type="button" style="flex: 1 1 0" onClick="{{closeSel}}">Cancelar</button>
+              <button class="btn btn-primary" type="button" style="flex: 2 1 0" onClick="{{saveBlk}}">Bloquear horario</button>
+            </div>
+          </sc-if>
+        </sc-if>
+
+        <sc-if value="{{modeMeet}}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap">
+            <span class="{{selBadge}}"><span class="dot"></span>{{selCo}}</span>
+            <span style="font-size: 14px; color: var(--muted)">se reúne con</span>
+            <span class="{{selWithBadge}}"><span class="dot"></span>{{selWith}}</span>
+          </div>
+          <div style="display: flex; gap: 12px">
+            <button class="btn" type="button" style="flex: 1 1 0" onClick="{{closeSel}}">Cerrar</button>
+            <button class="btn btn-danger" type="button" style="flex: 1 1 0" onClick="{{cancelSel}}">Cancelar reunión</button>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{modeBlk}}" hint-placeholder-val="{{ false }}">
+          <p style="margin: 0; font-size: 14px; color: var(--text-2)">Este bloque está marcado como no disponible para todas las empresas.</p>
+          <div style="display: flex; gap: 12px">
+            <button class="btn" type="button" style="flex: 1 1 0" onClick="{{closeSel}}">Cerrar</button>
+            <button class="btn btn-primary" type="button" style="flex: 1 1 0" onClick="{{unblock}}">Desbloquear</button>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{modeUser}}" hint-placeholder-val="{{ false }}">
+          <label class="lbl">Nombre<input class="field" type="text" placeholder="Ej.: Camila Rojas" value="{{nu.name}}" onInput="{{onNuName}}"></label>
+          <label class="lbl">Correo<input class="field" type="email" placeholder="nombre@empresa.cl" value="{{nu.email}}" onInput="{{onNuEmail}}"></label>
+          <div role="group" aria-label="Tipo de acceso" style="display: flex; gap: 2px; padding: 3px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--border)">
+            <button type="button" class="{{roleAgenda}}" onClick="{{setRoleAgenda}}">Usuario</button>
+            <button type="button" class="{{roleAdmin}}" onClick="{{setRoleAdmin}}">Administrador</button>
+          </div>
+          <label class="lbl">Empresa
+            <select class="field" value="{{nu.co}}" onChange="{{onNuCo}}"><option value="A">Empresa A</option><option value="B">Empresa B</option><option value="C">Empresa C</option><option value="D">Empresa D</option><option value="E">Empresa E</option><option value="F">Empresa F</option></select>
+          </label>
+          <div style="display: flex; gap: 12px">
+            <button class="btn" type="button" style="flex: 1 1 0" onClick="{{closeSel}}">Cancelar</button>
+            <button class="btn btn-primary" type="button" style="flex: 2 1 0" onClick="{{createUser}}">Crear usuario</button>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false,"section":"Vista"},"$preview":{"width":393,"height":852}}'>
+var fmt = function (m) { return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
+var TIMES = []; for (var m = 600; m < 1140; m += 30) { TIMES.push(fmt(m)); }
+var DAYS = [{ id: 18, name: 'Miércoles', dow: 'MIÉ' }, { id: 19, name: 'Jueves', dow: 'JUE' }, { id: 20, name: 'Viernes', dow: 'VIE' }];
+var MEETS = {
+  '18-10:00': { co: 'B', w: 'E' }, '18-11:00': { co: 'A', w: 'C' }, '18-12:00': { co: 'D', w: 'B' }, '18-14:30': { co: 'C', w: 'F' }, '18-16:30': { co: 'E', w: 'A' }, '18-17:00': { co: 'F', w: 'D' },
+  '19-10:30': { co: 'C', w: 'B' }, '19-11:00': { co: 'E', w: 'D' }, '19-12:00': { co: 'B', w: 'F' }, '19-15:30': { co: 'A', w: 'F' }, '19-16:00': { co: 'D', w: 'C' }, '19-17:30': { co: 'F', w: 'E' },
+  '20-10:00': { co: 'A', w: 'D' }, '20-11:30': { co: 'B', w: 'C' }, '20-14:30': { co: 'E', w: 'F' }, '20-15:00': { co: 'C', w: 'A' }, '20-16:00': { co: 'D', w: 'B' }
+};
+var BLOCKED = ['18-13:00', '18-13:30', '19-13:00', '19-13:30', '20-13:00', '20-13:30', '20-18:30'];
+var USERS = [
+  { id: 1, name: 'Admin', email: 'admin.agenda@empresa.cl', user: 'admin', role: 'Administrador', co: 'A' },
+  { id: 2, name: 'Emanuel', email: 'emanuel@correo.cl', user: 'ema', role: 'Usuario de la agenda', co: 'A' }
+];
+var EMPTY = { name: '', email: '', role: 'Usuario de la agenda', co: 'A' };
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { dark: null, view: 'cal', day: 18, menu: false, sel: null, tab: 'meet', fCo: 'A', fWith: 'B',
+      meets: Object.assign({}, MEETS), blocked: BLOCKED.slice(), users: USERS.slice(), nu: Object.assign({}, EMPTY), q: '' };
+  }
+  renderVals() {
+    var self = this, s = this.state, p = this.props;
+    var dark = s.dark !== null ? s.dark : !!p.dark;
+    var meets = s.meets, blocked = s.blocked;
+    var dayOf = function (id) { return DAYS.filter(function (d) { return d.id === id; })[0]; };
+    var stats = function (d) {
+      var n = 0, b = 0, set = {};
+      TIMES.forEach(function (t) { var k = d.id + '-' + t; if (meets[k]) { n++; set[meets[k].co] = 1; set[meets[k].w] = 1; } else if (blocked.indexOf(k) >= 0) b++; });
+      return { n: n, b: b, free: 18 - n - b, cos: Object.keys(set).length, occ: Math.round(n / 18 * 100) };
+    };
+    var openSel = function (dayId, i) {
+      var key = dayId + '-' + TIMES[i];
+      self.setState({ sel: { day: dayId, i: i, mode: meets[key] ? 'meet' : (blocked.indexOf(key) >= 0 ? 'blk' : 'new') }, tab: 'meet', fCo: 'A', fWith: 'B' });
+    };
+    var cur = dayOf(s.day);
+    var slots = TIMES.map(function (t, i) {
+      var k = cur.id + '-' + t, mt = meets[k], isBlk = !mt && blocked.indexOf(k) >= 0;
+      return { time: t, isMeet: !!mt, isBlk: isBlk, isFree: !mt && !isBlk,
+        co: mt ? 'Empresa ' + mt.co : '', with: mt ? 'Empresa ' + mt.w : '', mcls: mt ? 'row-btn meet co-' + mt.co : 'row-btn meet',
+        aria: (mt ? 'Gestionar reunión ' : (isBlk ? 'Desbloquear ' : 'Agendar o bloquear ')) + cur.name + ' ' + cur.id + ' ' + t,
+        pick: function () { openSel(cur.id, i); } };
+    });
+    var q = (s.q || '').toLowerCase();
+    var userRows = s.users.filter(function (u) { return !q || (u.name + ' ' + u.email + ' ' + u.user).toLowerCase().indexOf(q) >= 0; }).map(function (u) {
+      return { name: u.name, email: u.email, user: u.user, role: u.role, co: u.co, ini: u.name.charAt(0).toUpperCase(), av: 'co-' + u.co, badge: 'badge co-' + u.co, aria: 'Quitar a ' + u.name,
+        remove: function () { self.setState({ users: s.users.filter(function (x) { return x.id !== u.id; }) }); } };
+    });
+    var sel = s.sel, selKey = sel && sel.mode !== 'user' ? sel.day + '-' + TIMES[sel.i] : '', selM = selKey ? meets[selKey] : null;
+    var nu = s.nu;
+    var setNu = function (f) { return function (e) { var n = Object.assign({}, s.nu); n[f] = e.target.value; self.setState({ nu: n }); }; };
+    var cst = stats(cur);
+    var isUserSheet = !!sel && sel.mode === 'user';
+    return {
+      rootClass: dark ? 'af dark' : 'af', isDark: dark, isLight: !dark,
+      toggleTheme: function () { self.setState({ dark: !dark }); },
+      isCal: s.view === 'cal', isUsr: s.view === 'usr',
+      menuOpen: s.menu, openMenu: function () { self.setState({ menu: true }); }, closeMenu: function () { self.setState({ menu: false }); },
+      navCal: s.view === 'cal' ? 'nav-item is-active' : 'nav-item', navUsr: s.view === 'usr' ? 'nav-item is-active' : 'nav-item',
+      goCal: function () { self.setState({ view: 'cal', menu: false }); }, goUsr: function () { self.setState({ view: 'usr', menu: false }); },
+      days: DAYS.map(function (d) {
+        var a = s.day === d.id;
+        return { dow: d.dow, num: d.id, n: stats(d).n, sel: a ? 'true' : 'false', cls: a ? 'day is-active' : 'day',
+          numBg: a ? 'var(--brand)' : 'transparent', numColor: a ? 'var(--brand-ink)' : 'var(--text)', pick: function () { self.setState({ day: d.id }); } };
+      }),
+      k: cst, slots: slots,
+      userCount: s.users.length, userPct: Math.max(2, Math.round(s.users.length / 30 * 100)), userRows: userRows, q: s.q,
+      onQ: function (e) { self.setState({ q: e.target.value }); },
+      openCreate: function () { self.setState({ sel: { mode: 'user' }, nu: Object.assign({}, EMPTY) }); },
+      hasSheet: !!sel,
+      modeNew: !!sel && sel.mode === 'new', modeMeet: !!sel && sel.mode === 'meet', modeBlk: !!sel && sel.mode === 'blk', modeUser: isUserSheet,
+      dlgTitle: !sel ? '' : ({ 'new': 'Bloque libre', meet: 'Reunión agendada', blk: 'Bloque no disponible', user: 'Crear usuario' })[sel.mode],
+      dlgWhen: !sel ? '' : (isUserSheet ? s.users.length + ' de 30 usuarios creados' : dayOf(sel.day).name + ' ' + sel.day + ' nov · ' + TIMES[sel.i] + ' – ' + fmt(600 + sel.i * 30 + 30)),
+      tabMeet: s.tab === 'meet' ? 'seg is-active' : 'seg', tabBlk: s.tab === 'blk' ? 'seg is-active' : 'seg',
+      isTabMeet: s.tab === 'meet', isTabBlk: s.tab === 'blk',
+      setTabMeet: function () { self.setState({ tab: 'meet' }); }, setTabBlk: function () { self.setState({ tab: 'blk' }); },
+      fCo: s.fCo, fWith: s.fWith,
+      onFCo: function (e) { self.setState({ fCo: e.target.value }); }, onFWith: function (e) { self.setState({ fWith: e.target.value }); },
+      selCo: selM ? 'Empresa ' + selM.co : '', selWith: selM ? 'Empresa ' + selM.w : '',
+      selBadge: selM ? 'badge co-' + selM.co : 'badge', selWithBadge: selM ? 'badge co-' + selM.w : 'badge',
+      closeSel: function () { self.setState({ sel: null }); },
+      saveMeet: function () { var nm = Object.assign({}, s.meets); nm[selKey] = { co: s.fCo, w: s.fWith }; self.setState({ meets: nm, sel: null }); },
+      saveBlk: function () { self.setState({ blocked: s.blocked.concat([selKey]), sel: null }); },
+      cancelSel: function () { var nm = Object.assign({}, s.meets); delete nm[selKey]; self.setState({ meets: nm, sel: null }); },
+      unblock: function () { self.setState({ blocked: s.blocked.filter(function (x) { return x !== selKey; }), sel: null }); },
+      nu: nu, onNuName: setNu('name'), onNuEmail: setNu('email'), onNuCo: setNu('co'),
+      roleAgenda: nu.role === 'Usuario de la agenda' ? 'seg is-active' : 'seg', roleAdmin: nu.role === 'Administrador' ? 'seg is-active' : 'seg',
+      setRoleAgenda: function () { self.setState({ nu: Object.assign({}, s.nu, { role: 'Usuario de la agenda' }) }); },
+      setRoleAdmin: function () { self.setState({ nu: Object.assign({}, s.nu, { role: 'Administrador' }) }); },
+      createUser: function () {
+        if (!nu.name || s.users.length >= 30) return;
+        self.setState({ users: s.users.concat([{ id: Date.now(), name: nu.name, email: nu.email || 'sin correo', user: nu.name.toLowerCase().split(' ')[0], role: nu.role, co: nu.co }]), sel: null });
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,18 +1,21 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Outfit } from "next/font/google";
+import { Manrope, Outfit } from "next/font/google";
 import type { CSSProperties } from "react";
 import "./globals.css";
 import { config } from "@/lib/config";
 
-const inter = Inter({
+// Manrope para la interfaz y Outfit para títulos y cifras (tokens.css).
+const manrope = Manrope({
   subsets: ["latin"],
-  variable: "--font-inter",
+  weight: ["300", "400", "500", "600"],
+  variable: "--next-manrope",
   display: "swap",
 });
 
 const outfit = Outfit({
   subsets: ["latin"],
-  variable: "--font-app",
+  weight: ["300", "400", "500"],
+  variable: "--next-outfit",
   display: "swap",
 });
 
@@ -41,11 +44,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   } as CSSProperties;
 
   return (
-    <html lang="es" className={`${outfit.variable} ${inter.variable}`} style={themeVars} suppressHydrationWarning>
+    <html lang="es" className={`${outfit.variable} ${manrope.variable}`} style={themeVars} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body className="min-h-screen bg-gray-50 font-outfit font-normal text-gray-800 antialiased dark:bg-gray-950 dark:text-white/90">
+      <body className="min-h-screen font-normal antialiased">
         {children}
       </body>
     </html>

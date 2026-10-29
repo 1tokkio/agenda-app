@@ -161,7 +161,7 @@ function SlotCell({
 
   const { meeting } = state;
   const target = companyById(meeting.targetCompanyId);
-  const accent = target?.color ?? "#64748b";
+  const accent = target?.color ?? "var(--muted)";
   const content = (
     <span
       title={`${meeting.title} · ${meeting.requesterCompany} con ${target?.name ?? ""}`}

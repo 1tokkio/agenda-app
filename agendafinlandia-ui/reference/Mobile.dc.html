@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Agenda de reuniones — iPhone 16</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600&amp;family=Outfit:wght@300;400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Manrope',system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+.af{--bg:#F6F7F9;--surface:#FFFFFF;--surface-2:#F9FAFB;--border:#E4E7EC;--border-soft:#EEF0F3;--text:#101828;--text-2:#344054;--muted:#5D6B82;--brand:#1F4FD1;--brand-ink:#FFFFFF;--brand-soft:#EEF3FF;--brand-text:#1E3A8A;--own-bg:#EAF0FF;--own-bd:#B9CCFD;--taken-bg:#F2F4F7;--taken-bd:#E4E7EC;--hatch-a:#F2F4F7;--hatch-b:#FAFBFC;--now:#E8590C;--ok:#067647}
+.af.dark{--bg:#0C0E12;--surface:#13161B;--surface-2:#191D23;--border:#262B33;--border-soft:#1F232A;--text:#F2F4F7;--text-2:#CED4DC;--muted:#97A1AF;--brand:#3563E9;--brand-ink:#FFFFFF;--brand-soft:#17223F;--brand-text:#AFC5FF;--own-bg:#18264A;--own-bd:#2D4A93;--taken-bg:#1C2027;--taken-bd:#2A2F38;--hatch-a:#171A20;--hatch-b:#1C2027;--now:#FF8A4C;--ok:#47CD89}
+.af *{box-sizing:border-box}
+.af button{font-family:inherit}
+.display{font-family:'Outfit',system-ui,sans-serif;letter-spacing:-.01em}
+.hatch{background:repeating-linear-gradient(135deg,var(--hatch-a) 0 6px,var(--hatch-b) 6px 12px)}
+.iconbtn{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:12px;border:0;background:transparent;color:var(--text-2);cursor:pointer}
+.iconbtn:active{background:var(--surface-2)}
+.day{flex:1 1 0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;border-radius:12px;border:1px solid transparent;background:transparent;color:var(--text-2);cursor:pointer}
+.day.is-active{background:var(--surface);border-color:var(--border);box-shadow:0 1px 2px rgba(16,24,40,.08);color:var(--text)}
+.slot-free{width:100%;height:100%;display:flex;align-items:center;justify-content:space-between;padding:0 14px;border-radius:10px;border:1.5px dashed var(--border);background:transparent;color:var(--muted);font-size:13px;font-weight:500;cursor:pointer}
+.slot-free:active{background:var(--brand-soft);border-color:var(--brand);color:var(--brand-text)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:48px;padding:0 16px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text-2);font-size:15px;font-weight:500;cursor:pointer}
+.btn-primary{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.field{width:100%;height:48px;padding:0 14px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:16px;font-family:inherit}
+.field:focus{outline:2px solid var(--brand);outline-offset:-1px}
+.nav-item{display:flex;align-items:center;gap:12px;height:48px;padding:0 14px;border-radius:12px;color:var(--text-2);font-size:15px;font-weight:500;text-decoration:none}
+.nav-item.is-active{background:var(--brand-soft);color:var(--brand-text)}
+.ellipsis{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+a{color:var(--brand)}a:hover{color:var(--brand-text)}
+</style>
+</helmet>
+<div class="{{rootClass}}" style="width: 393px; height: 852px; position: relative; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); color: var(--text); font-family: 'Manrope', system-ui, sans-serif">
+
+  <header style="flex: 0 0 auto; display: flex; align-items: center; gap: 4px; padding: 8px 8px 8px 6px; background: var(--surface); border-bottom: 1px solid var(--border)">
+    <button class="iconbtn" type="button" aria-label="Abrir menú" onClick="{{openMenu}}">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>
+    </button>
+    <div style="display: flex; align-items: center; gap: 10px; flex: 1 1 auto; min-width: 0">
+      <div style="width: 32px; height: 32px; border-radius: 9px; background: #0B3A8C; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 12px">AF</div>
+      <span class="display" style="font-size: 18px; font-weight: 500">AgendaFinlandia</span>
+    </div>
+    <button class="iconbtn" type="button" aria-label="Cambiar tema claro u oscuro" onClick="{{toggleTheme}}">
+      <sc-if value="{{isLight}}" hint-placeholder-val="{{ true }}">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"></path></svg>
+      </sc-if>
+      <sc-if value="{{isDark}}" hint-placeholder-val="{{ false }}">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>
+      </sc-if>
+    </button>
+    <div style="width: 36px; height: 36px; margin: 0 4px; border-radius: 50%; background: var(--brand-soft); color: var(--brand-text); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600">E</div>
+  </header>
+
+  <div style="flex: 0 0 auto; padding: 18px 16px 12px; display: flex; flex-direction: column; gap: 14px">
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <h1 class="display" style="margin: 0; font-size: 28px; line-height: 1.15; font-weight: 400; letter-spacing: -.02em">Agenda de reuniones</h1>
+      <p style="margin: 0; font-size: 14px; color: var(--muted)">Expocorma 2026 · 18 – 20 nov · bloques de 30 min</p>
+    </div>
+    <sc-if value="{{hasNext}}" hint-placeholder-val="{{ true }}">
+      <div style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 14px; background: var(--own-bg); border: 1px solid var(--own-bd)">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--brand-text)" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
+        <div style="display: flex; flex-direction: column; min-width: 0">
+          <span style="font-size: 12px; font-weight: 600; letter-spacing: .06em; color: var(--brand-text)">PRÓXIMA · {{next.when}}</span>
+          <span class="ellipsis" style="font-size: 14px; font-weight: 500; color: var(--brand-text)">{{next.title}}</span>
+        </div>
+      </div>
+    </sc-if>
+    <div role="tablist" aria-label="Día del evento" style="display: flex; gap: 4px; padding: 4px; border-radius: 14px; background: var(--surface-2); border: 1px solid var(--border)">
+      <sc-for list="{{days}}" as="d" hint-placeholder-count="3">
+        <button type="button" role="tab" aria-selected="{{d.selected}}" class="{{d.cls}}" onClick="{{d.pick}}">
+          <span style="font-size: 12px; font-weight: 500; color: var(--muted)">{{d.dow}}</span>
+          <span style="width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 19px; font-weight: 400; font-family: 'Outfit', system-ui, sans-serif; background: {{d.numBg}}; color: {{d.numColor}}">{{d.num}}</span>
+          <span style="font-size: 11px; color: var(--muted)">{{d.free}} libres</span>
+        </button>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 0 16px 24px">
+    <sc-for list="{{slots}}" as="s" hint-placeholder-count="12">
+      <div style="display: flex; gap: 12px; height: 60px; padding: 4px 0">
+        <div style="flex: 0 0 44px; padding-top: 6px; font-size: 13px; font-weight: 500; color: var(--muted); font-variant-numeric: tabular-nums">{{s.time}}</div>
+        <div style="flex: 1 1 auto; min-width: 0">
+          <sc-if value="{{s.isFree}}" hint-placeholder-val="{{ true }}">
+            <button type="button" class="slot-free" aria-label="{{s.aria}}" onClick="{{s.pick}}">
+              <span>Disponible</span>
+              <span style="display: inline-flex; align-items: center; gap: 6px; color: var(--brand-text); font-weight: 500">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+                Agendar
+              </span>
+            </button>
+          </sc-if>
+          <sc-if value="{{s.isOwn}}" hint-placeholder-val="{{ false }}">
+            <div style="height: 100%; padding: 0 14px; border-radius: 10px; background: var(--own-bg); border: 1px solid var(--own-bd); display: flex; flex-direction: column; justify-content: center; min-width: 0">
+              <span class="ellipsis" style="font-size: 14px; font-weight: 500; color: var(--brand-text)">{{s.title}}</span>
+              <span style="font-size: 12px; color: var(--brand-text); font-variant-numeric: tabular-nums">{{s.range}} · Tu empresa</span>
+            </div>
+          </sc-if>
+          <sc-if value="{{s.isTaken}}" hint-placeholder-val="{{ false }}">
+            <div style="height: 100%; padding: 0 14px; border-radius: 10px; background: var(--taken-bg); border: 1px solid var(--taken-bd); display: flex; align-items: center; justify-content: space-between">
+              <span style="font-size: 14px; font-weight: 500; color: var(--text-2)">Reservado</span>
+              <span style="font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums">{{s.range}}</span>
+            </div>
+          </sc-if>
+          <sc-if value="{{s.isBlocked}}" hint-placeholder-val="{{ false }}">
+            <div class="hatch" style="height: 100%; padding: 0 14px; border-radius: 10px; display: flex; align-items: center; font-size: 13px; font-weight: 500; color: var(--muted)">No disponible</div>
+          </sc-if>
+        </div>
+      </div>
+      <sc-if value="{{s.nowAfter}}" hint-placeholder-val="{{ false }}">
+        <div aria-hidden="true" style="display: flex; align-items: center; gap: 8px; height: 0; overflow: visible; margin-left: 2px">
+          <span style="font-size: 11px; font-weight: 600; color: var(--now); background: var(--bg); padding-right: 4px">11:40</span>
+          <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--now)"></span>
+          <span style="flex: 1 1 auto; height: 2px; background: var(--now)"></span>
+        </div>
+      </sc-if>
+    </sc-for>
+  </div>
+
+  <sc-if value="{{menuOpen}}" hint-placeholder-val="{{ false }}">
+    <div style="position: absolute; inset: 0; z-index: 40; display: flex; background: rgba(10,13,18,.5)">
+      <nav aria-label="Navegación principal" style="width: 300px; height: 100%; padding: 20px 14px; background: var(--surface); display: flex; flex-direction: column; gap: 24px">
+        <div style="display: flex; align-items: center; justify-content: space-between">
+          <div style="display: flex; align-items: center; gap: 12px">
+            <div style="width: 40px; height: 40px; border-radius: 11px; background: #0B3A8C; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px">AF</div>
+            <div style="display: flex; flex-direction: column">
+              <span class="display" style="font-size: 17px; font-weight: 500">AgendaFinlandia</span>
+              <span style="font-size: 11px; font-weight: 500; letter-spacing: .12em; color: var(--muted)">EXPOCORMA 2026</span>
+            </div>
+          </div>
+          <button class="iconbtn" type="button" aria-label="Cerrar menú" onClick="{{closeMenu}}">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+          </button>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <span style="padding: 0 14px 6px; font-size: 11px; font-weight: 500; letter-spacing: .08em; color: var(--muted)">MENÚ</span>
+          <a href="#" class="nav-item is-active" aria-current="page">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4.5" width="18" height="16" rx="2.5"></rect><path d="M8 2.5v4M16 2.5v4M3 10h18"></path></svg>
+            Agenda
+          </a>
+        </div>
+        <div style="flex: 1 1 auto"></div>
+        <div style="display: flex; flex-direction: column; gap: 12px; padding-top: 16px; border-top: 1px solid var(--border)">
+          <div style="display: flex; flex-direction: column">
+            <span style="font-size: 14px; font-weight: 500">Emanuel</span>
+            <span style="font-size: 13px; color: var(--muted)">Empresa A · emanuel@correo.cl</span>
+          </div>
+          <button class="btn" type="button">Cerrar sesión</button>
+        </div>
+      </nav>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{hasSel}}" hint-placeholder-val="{{ false }}">
+    <div style="position: absolute; inset: 0; z-index: 50; display: flex; flex-direction: column; justify-content: flex-end; background: rgba(10,13,18,.5)">
+      <div role="dialog" aria-modal="true" aria-labelledby="m-dlg" style="border-radius: 20px 20px 0 0; background: var(--surface); padding: 10px 16px 28px; display: flex; flex-direction: column; gap: 16px">
+        <div style="align-self: center; width: 40px; height: 5px; border-radius: 999px; background: var(--border)"></div>
+        <h2 id="m-dlg" class="display" style="margin: 0; font-size: 22px; font-weight: 500">Agendar reunión</h2>
+        <div style="padding: 12px 14px; border-radius: 12px; background: var(--brand-soft); display: flex; flex-direction: column; gap: 2px">
+          <span style="font-size: 15px; font-weight: 600; color: var(--brand-text)">{{selDay}}</span>
+          <span style="font-size: 14px; color: var(--brand-text); font-variant-numeric: tabular-nums">{{selRange}} · 30 min</span>
+        </div>
+        <label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 500; color: var(--text-2)">
+          Empresa con la que te reúnes
+          <input class="field" type="text" placeholder="Ej.: Empresa C" value="{{withCo}}" onInput="{{onWith}}">
+        </label>
+        <div style="display: flex; gap: 12px">
+          <button class="btn" type="button" style="flex: 1 1 0" onClick="{{closeSel}}">Cancelar</button>
+          <button class="btn btn-primary" type="button" style="flex: 2 1 0" onClick="{{confirm}}">Confirmar reserva</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false,"section":"Vista"},"$preview":{"width":393,"height":852}}'>
+var fmt = function (m) { return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
+var TIMES = []; for (var m = 600; m < 1140; m += 30) { TIMES.push(fmt(m)); }
+var DAYS = [
+  { id: 18, short: 'Miércoles', dow: 'MIÉ' },
+  { id: 19, short: 'Jueves', dow: 'JUE', today: true },
+  { id: 20, short: 'Viernes', dow: 'VIE' }
+];
+var OWN = { '18-11:00': 'Reunión con Empresa C', '19-15:30': 'Reunión con Empresa F', '20-10:00': 'Reunión con Empresa D' };
+var TAKEN = ['18-10:00', '18-12:00', '18-14:30', '18-16:30', '18-17:00', '19-10:30', '19-11:00', '19-12:00', '19-16:00', '19-17:30', '20-11:30', '20-14:30', '20-15:00', '20-16:00'];
+var BLOCKED = ['18-13:00', '18-13:30', '19-13:00', '19-13:30', '20-13:00', '20-13:30', '20-18:30'];
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { dark: null, day: 19, menu: false, sel: null, withCo: '', added: {} };
+  }
+  renderVals() {
+    var self = this, s = this.state, p = this.props;
+    var dark = s.dark !== null ? s.dark : !!p.dark;
+    var own = Object.assign({}, OWN, s.added);
+    var build = function (d) {
+      return TIMES.map(function (t, i) {
+        var key = d.id + '-' + t;
+        var ownT = own[key];
+        var isOwn = !!ownT;
+        var isTaken = !isOwn && TAKEN.indexOf(key) >= 0;
+        var isBlocked = !isOwn && !isTaken && BLOCKED.indexOf(key) >= 0;
+        return {
+          time: t, range: t + ' – ' + fmt(600 + i * 30 + 30), title: ownT || '',
+          isOwn: isOwn, isTaken: isTaken, isBlocked: isBlocked, isFree: !isOwn && !isTaken && !isBlocked,
+          nowAfter: !!d.today && t === '11:30',
+          aria: 'Agendar ' + d.short + ' ' + d.id + ' a las ' + t,
+          pick: function () { self.setState({ sel: { day: d.id, i: i }, withCo: '' }); }
+        };
+      });
+    };
+    var mine = [];
+    var days = DAYS.map(function (d) {
+      var sl = build(d);
+      sl.forEach(function (x) { if (x.isOwn) mine.push({ title: x.title, when: d.dow + ' ' + d.id + ' · ' + x.time }); });
+      var active = s.day === d.id;
+      return {
+        dow: d.dow, num: d.id, free: sl.filter(function (x) { return x.isFree; }).length,
+        selected: active ? 'true' : 'false', cls: active ? 'day is-active' : 'day',
+        numBg: d.today ? 'var(--brand)' : 'transparent',
+        numColor: d.today ? 'var(--brand-ink)' : 'var(--text)',
+        pick: function () { self.setState({ day: d.id }); }
+      };
+    });
+    var cur = DAYS.filter(function (d) { return d.id === s.day; })[0];
+    var sel = s.sel, selDay = '', selRange = '';
+    if (sel) {
+      var sd = DAYS.filter(function (d) { return d.id === sel.day; })[0];
+      selDay = sd.short + ' ' + sd.id + ' de noviembre';
+      selRange = TIMES[sel.i] + ' – ' + fmt(600 + sel.i * 30 + 30);
+    }
+    return {
+      rootClass: dark ? 'af dark' : 'af', isDark: dark, isLight: !dark,
+      days: days, slots: build(cur),
+      hasNext: mine.length > 0, next: mine[0] || { title: '', when: '' },
+      menuOpen: s.menu,
+      openMenu: function () { self.setState({ menu: true }); },
+      closeMenu: function () { self.setState({ menu: false }); },
+      toggleTheme: function () { self.setState({ dark: !dark }); },
+      hasSel: !!sel, selDay: selDay, selRange: selRange, withCo: s.withCo,
+      onWith: function (e) { self.setState({ withCo: e.target.value }); },
+      closeSel: function () { self.setState({ sel: null }); },
+      confirm: function () {
+        if (!sel) return;
+        var add = Object.assign({}, s.added);
+        add[sel.day + '-' + TIMES[sel.i]] = 'Reunión con ' + (s.withCo || 'empresa por confirmar');
+        self.setState({ added: add, sel: null });
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>

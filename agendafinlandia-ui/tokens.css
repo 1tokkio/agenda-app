@@ -1,0 +1,96 @@
+/* AgendaFinlandia — tokens del rediseño
+   Fuentes: <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet">
+   Tema: clase .dark en <html> (o el selector que ya use la app). */
+
+:root {
+  --font-ui: 'Manrope', system-ui, -apple-system, sans-serif;
+  --font-display: 'Outfit', system-ui, sans-serif;
+
+  --bg: #F6F7F9;
+  --surface: #FFFFFF;
+  --surface-2: #F9FAFB;
+  --border: #E4E7EC;
+  --border-soft: #EEF0F3;
+  --text: #101828;
+  --text-2: #344054;
+  --muted: #5D6B82;
+
+  --brand: #1F4FD1;
+  --brand-ink: #FFFFFF;
+  --brand-soft: #EEF3FF;
+  --brand-text: #1E3A8A;
+  --logo: #0B3A8C;
+
+  --own-bg: #EAF0FF;   /* reunión de mi empresa (vista usuario) */
+  --own-bd: #B9CCFD;
+  --taken-bg: #F2F4F7; /* reservado por otra empresa */
+  --taken-bd: #E4E7EC;
+  --hatch-a: #F2F4F7;  /* bloque no disponible (rayado) */
+  --hatch-b: #FAFBFC;
+  --off-a: #F7F8FA;    /* día fuera del evento en vista semana */
+  --off-b: #FFFFFF;
+
+  --now: #E8590C;
+  --ok: #067647;
+  --danger: #B42318;
+  --danger-bd: #FDA29B;
+  --danger-soft: #FEF3F2;
+
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --slot-h: 52px;      /* fila de 30 min en escritorio */
+  --slot-h-mobile: 60px;
+  --shadow-modal: 0 24px 48px -12px rgba(16, 24, 40, .25);
+}
+
+.dark {
+  --bg: #0C0E12;
+  --surface: #13161B;
+  --surface-2: #191D23;
+  --border: #262B33;
+  --border-soft: #1F232A;
+  --text: #F2F4F7;
+  --text-2: #CED4DC;
+  --muted: #97A1AF;
+
+  --brand: #3563E9;
+  --brand-ink: #FFFFFF;
+  --brand-soft: #17223F;
+  --brand-text: #AFC5FF;
+
+  --own-bg: #18264A;
+  --own-bd: #2D4A93;
+  --taken-bg: #1C2027;
+  --taken-bd: #2A2F38;
+  --hatch-a: #171A20;
+  --hatch-b: #1C2027;
+  --off-a: #111418;
+  --off-b: #15181D;
+
+  --now: #FF8A4C;
+  --ok: #47CD89;
+  --danger: #F97066;
+  --danger-bd: #7A271A;
+  --danger-soft: #2A1513;
+}
+
+/* Colores por empresa (panel admin). Aplicar .co-A … .co-F y usar var(--cbg/--cbd/--ctx) */
+.co-A { --cbg: #EAF0FF; --cbd: #B9CCFD; --ctx: #1E3A8A; }
+.co-B { --cbg: #F1EDFF; --cbd: #D3C7FE; --ctx: #4C2A9E; }
+.co-C { --cbg: #E6F6F4; --cbd: #A8DED6; --ctx: #0B5A52; }
+.co-D { --cbg: #FFF4E0; --cbd: #F6D193; --ctx: #7A4A00; }
+.co-E { --cbg: #FDECF2; --cbd: #F5B9CF; --ctx: #8A1C4A; }
+.co-F { --cbg: #E9F7EE; --cbd: #AEDFC0; --ctx: #135C33; }
+.dark .co-A { --cbg: #18264A; --cbd: #2D4A93; --ctx: #AFC5FF; }
+.dark .co-B { --cbg: #251C45; --cbd: #4A3790; --ctx: #CDBEFF; }
+.dark .co-C { --cbg: #0F2B29; --cbd: #1F5A54; --ctx: #8EE0D4; }
+.dark .co-D { --cbg: #2E2310; --cbd: #6B4E17; --ctx: #F7CF85; }
+.dark .co-E { --cbg: #33161F; --cbd: #6E2D44; --ctx: #F7AFC8; }
+.dark .co-F { --cbg: #11281A; --cbd: #275A3A; --ctx: #93DDB0; }
+
+.hatch { background: repeating-linear-gradient(135deg, var(--hatch-a) 0 6px, var(--hatch-b) 6px 12px); }
+.col-off { background: repeating-linear-gradient(135deg, var(--off-a) 0 6px, var(--off-b) 6px 12px); }
+
+body { font-family: var(--font-ui); background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
+h1, h2, .display { font-family: var(--font-display); letter-spacing: -.01em; }

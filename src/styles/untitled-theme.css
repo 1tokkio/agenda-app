@@ -5,8 +5,7 @@
  * Son reglas sin capas, así que ganan a las utilidades de Tailwind dentro del ámbito.
  */
 .untitled {
-  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-outfit: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-ui);
 }
 
 .dark .untitled {

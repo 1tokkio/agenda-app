@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "../styles/tokens.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -8,7 +9,6 @@
 
 @theme {
   --font-*: initial;
-  --font-outfit: var(--font-app), ui-sans-serif, system-ui, sans-serif;
 
   --breakpoint-*: initial;
   --breakpoint-2xsm: 375px;
@@ -42,19 +42,33 @@
   --color-white: #ffffff;
   --color-black: #101828;
 
-  /* Marca: derivada de config/event.ts (theme.colors.primary) vía --app-primary */
-  --color-brand-25: color-mix(in srgb, var(--app-primary) 4%, white);
-  --color-brand-50: color-mix(in srgb, var(--app-primary) 8%, white);
-  --color-brand-100: color-mix(in srgb, var(--app-primary) 16%, white);
-  --color-brand-200: color-mix(in srgb, var(--app-primary) 28%, white);
-  --color-brand-300: color-mix(in srgb, var(--app-primary) 50%, white);
-  --color-brand-400: color-mix(in srgb, var(--app-primary) 75%, white);
-  --color-brand-500: var(--app-primary);
-  --color-brand-600: color-mix(in srgb, var(--app-primary) 88%, black);
-  --color-brand-700: color-mix(in srgb, var(--app-primary) 72%, black);
-  --color-brand-800: color-mix(in srgb, var(--app-primary) 58%, black);
-  --color-brand-900: color-mix(in srgb, var(--app-primary) 45%, black);
-  --color-brand-950: color-mix(in srgb, var(--app-primary) 25%, black);
+  /* Colores semánticos de tokens.css (cambian solos con la clase .dark) */
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-border-soft: var(--border-soft);
+  --color-text: var(--text);
+  --color-text-2: var(--text-2);
+  --color-muted: var(--muted);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-text: var(--brand-text);
+  --color-now: var(--now);
+  --color-ok: var(--ok);
+  --color-danger: var(--danger);
+
+  /* Marca: viene de tokens.css (--brand) */
+  --color-brand-25: color-mix(in srgb, var(--brand) 4%, white);
+  --color-brand-50: color-mix(in srgb, var(--brand) 8%, white);
+  --color-brand-100: color-mix(in srgb, var(--brand) 16%, white);
+  --color-brand-200: color-mix(in srgb, var(--brand) 28%, white);
+  --color-brand-300: color-mix(in srgb, var(--brand) 50%, white);
+  --color-brand-400: color-mix(in srgb, var(--brand) 75%, white);
+  --color-brand-500: var(--brand);
+  --color-brand-600: color-mix(in srgb, var(--brand) 88%, black);
+  --color-brand-700: color-mix(in srgb, var(--brand) 72%, black);
+  --color-brand-800: color-mix(in srgb, var(--brand) 58%, black);
+  --color-brand-900: color-mix(in srgb, var(--brand) 45%, black);
+  --color-brand-950: color-mix(in srgb, var(--brand) 25%, black);
 
   --color-blue-light-25: #f5fbff;
   --color-blue-light-50: #f0f9ff;
@@ -199,7 +213,7 @@
   }
 
   body {
-    @apply relative z-1 bg-gray-50 font-outfit font-normal;
+    @apply relative z-1 bg-gray-50 font-normal;
   }
 }
 
@@ -317,3 +331,9 @@
 
 
 
+
+/* Fuentes de tokens.css: Manrope para la interfaz y Outfit para títulos y cifras (next/font). */
+:root {
+  --font-ui: var(--next-manrope), system-ui, -apple-system, sans-serif;
+  --font-display: var(--next-outfit), system-ui, sans-serif;
+}

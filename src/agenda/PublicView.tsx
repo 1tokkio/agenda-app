@@ -23,7 +23,7 @@ export function PublicView({ me }: { me: MyCompany | null }) {
   };
 
   return (
-    <div className="flex flex-col gap-6 min-[1440px]:flex-row min-[1440px]:items-start">
+    <div className="flex flex-col gap-6 min-[1440px]:flex-row min-[1440px]:items-start min-[1440px]:gap-10">
       <div className="flex min-w-0 flex-1 flex-col gap-6">
         <section>
           <h1 className="text-[28px] leading-tight font-normal tracking-tight text-text md:text-[34px]" style={{ fontFamily: "var(--font-display)" }}>
@@ -41,7 +41,7 @@ export function PublicView({ me }: { me: MyCompany | null }) {
         />
       </div>
 
-      <div className="min-[1440px]:w-[340px] min-[1440px]:shrink-0">
+      <div className="min-[1440px]:sticky min-[1440px]:top-6 min-[1440px]:w-[340px] min-[1440px]:shrink-0">
         <UserSidePanel me={me} now={now} />
       </div>
 

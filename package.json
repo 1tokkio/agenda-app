@@ -8,16 +8,17 @@
     "start": "next start",
     "lint": "eslint",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "tsx src/db/migrate.ts",
-    "db:seed": "tsx scripts/seed.ts",
+    "db:migrate": "tsx --env-file-if-exists=.env.local src/db/migrate.ts",
+    "db:seed": "tsx --env-file-if-exists=.env.local scripts/seed.ts",
     "test": "vitest run",
-    "db:demo": "tsx scripts/seed-demo.ts",
-    "db:user": "tsx scripts/create-user.ts"
+    "db:demo": "tsx --env-file-if-exists=.env.local scripts/seed-demo.ts",
+    "db:user": "tsx --env-file-if-exists=.env.local scripts/create-user.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.13",
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.45.4",
+    "motion": "14.2.0",
     "next": "16.4.2",
     "postgres": "^3.4.9",
     "react": "19.3.0",

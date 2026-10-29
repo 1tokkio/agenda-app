@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useSyncExternalStore } from "react";
+import { motion } from "motion/react";
 import { cn } from "@/lib/cn";
 import { DAYS, SLOT_TIMES, TIME_ZONE, type Meeting } from "./data";
 import { endTime } from "./logic";
@@ -306,12 +307,17 @@ function SegmentButton({ active, onClick, children }: { active: boolean; onClick
       type="button"
       aria-pressed={active}
       onClick={onClick}
-      className={cn(
-        "h-8 rounded-lg px-3.5 text-[13px] font-medium",
-        active ? "bg-surface text-text shadow-sm ring-1 ring-border" : "text-muted hover:text-text-2",
-      )}
+      className={cn("relative h-8 rounded-lg px-3.5 text-[13px] font-medium transition-colors", active ? "text-text" : "text-muted hover:text-text-2")}
     >
-      {children}
+      {/* Pastilla que se desliza de una opción a otra. */}
+      {active && (
+        <motion.span
+          layoutId="segment-pill"
+          className="absolute inset-0 rounded-lg bg-surface shadow-sm ring-1 ring-border"
+          transition={{ type: "spring", stiffness: 420, damping: 34 }}
+        />
+      )}
+      <span className="relative">{children}</span>
     </button>
   );
 }

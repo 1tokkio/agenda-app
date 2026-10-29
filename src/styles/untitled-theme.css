@@ -94,7 +94,7 @@
   --color-brand-200: #9dbce6;
   --color-brand-300: #5f8fd1;
   --color-brand-400: #2f64b5;
-  --color-brand-500: #003580;
+  --color-brand-500: var(--brand);
   --color-brand-600: #002e72;
   --color-brand-700: #002760;
   --color-brand-800: #00204e;
@@ -110,7 +110,7 @@
   --color-brand-200: #24457f;
   --color-brand-300: #3d6fc0;
   --color-brand-400: #7fa6e6;
-  --color-brand-500: #3d6fc0;
+  --color-brand-500: var(--brand);
   --color-brand-600: #5581cc;
   --color-brand-700: #7fa6e6;
   --color-brand-800: #a9c4f0;

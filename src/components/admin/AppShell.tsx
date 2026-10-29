@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { MotionConfig } from "motion/react";
 import { cn } from "@/lib/cn";
 import { useSidebar, SidebarProvider } from "./SidebarContext";
 import { ADMIN_NAV, Sidebar, isNavActive, type NavItem } from "./Sidebar";
@@ -25,9 +26,11 @@ type ShellProps = {
 /** Shell de la app: menú lateral, topbar con breadcrumb y perfil, y contenido con el mismo espaciado en todas las vistas. */
 export function AppShell(props: ShellProps) {
   return (
+    <MotionConfig reducedMotion="user">
     <SidebarProvider>
       <ShellContent {...props} />
     </SidebarProvider>
+    </MotionConfig>
   );
 }
 

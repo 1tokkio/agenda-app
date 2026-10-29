@@ -1,9 +1,21 @@
 "use client";
 
+import { motion } from "motion/react";
 import { DAYS, SLOT_TIMES, type Meeting } from "./data";
 import { endTime, formatDayLabel, formatDayShort } from "./logic";
 import { useAgenda } from "./store";
 import { isOwnMeeting, type MyCompany } from "./UserAgenda";
+
+/** Las tarjetas entran una tras otra, de arriba abajo. */
+const container = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.09 } },
+};
+
+const card = {
+  hidden: { opacity: 0, y: 18 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: "easeOut" as const } },
+};
 
 /** Panel de la agenda del usuario: próxima reunión, sus reuniones y la ocupación de cada día. */
 export function UserSidePanel({ me, now }: { me: MyCompany | null; now: { date: string; minutes: number } | null }) {
@@ -13,8 +25,8 @@ export function UserSidePanel({ me, now }: { me: MyCompany | null; now: { date: 
   const next = mine.find((m) => isUpcoming(m, now)) ?? null;
 
   return (
-    <aside aria-label="Resumen de mi agenda" className="flex flex-col gap-4">
-      <section className="flex flex-col gap-3.5 rounded-2xl border border-border bg-surface p-5">
+    <motion.aside aria-label="Resumen de mi agenda" className="flex flex-col gap-4" variants={container} initial="hidden" animate="show">
+      <motion.section variants={card} whileHover={{ y: -2 }} className="flex flex-col gap-3.5 rounded-2xl border border-border p-5">
         <span className="text-xs font-semibold tracking-[0.08em] text-muted">PRÓXIMA REUNIÓN</span>
         {next ? (
           <>
@@ -35,9 +47,9 @@ export function UserSidePanel({ me, now }: { me: MyCompany | null; now: { date: 
         ) : (
           <p className="text-sm text-muted">No tienes reuniones próximas. Elige un bloque libre en la agenda.</p>
         )}
-      </section>
+      </motion.section>
 
-      <section className="flex flex-col gap-1 rounded-2xl border border-border bg-surface p-5">
+      <motion.section variants={card} whileHover={{ y: -2 }} className="flex flex-col gap-1 rounded-2xl border border-border p-5">
         <div className="mb-2 flex items-center justify-between">
           <span className="text-lg font-medium text-text" style={{ fontFamily: "var(--font-display)" }}>
             Mis reuniones
@@ -59,9 +71,9 @@ export function UserSidePanel({ me, now }: { me: MyCompany | null; now: { date: 
             </div>
           ))
         )}
-      </section>
+      </motion.section>
 
-      <section className="flex flex-col gap-4 rounded-2xl border border-border bg-surface p-5">
+      <motion.section variants={card} whileHover={{ y: -2 }} className="flex flex-col gap-4 rounded-2xl border border-border p-5">
         <span className="text-lg font-medium text-text" style={{ fontFamily: "var(--font-display)" }}>
           Ocupación de la sala
         </span>
@@ -79,13 +91,18 @@ export function UserSidePanel({ me, now }: { me: MyCompany | null; now: { date: 
                 </span>
               </div>
               <div className="h-2 overflow-hidden rounded-full border border-border-soft bg-surface-2">
-                <div className="h-full rounded-full bg-brand" style={{ width: `${pct}%` }} />
+                <motion.div
+                  className="h-full rounded-full bg-brand-500"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${pct}%` }}
+                  transition={{ duration: 0.9, ease: "easeOut", delay: 0.25 }}
+                />
               </div>
             </div>
           );
         })}
-      </section>
-    </aside>
+      </motion.section>
+    </motion.aside>
   );
 }
 

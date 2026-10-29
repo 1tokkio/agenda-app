@@ -56,26 +56,25 @@ export function Sidebar({
     <aside
       aria-label="Navegación principal"
       className={cn(
-        "fixed inset-y-0 start-0 z-50 flex h-screen flex-col gap-7 overflow-y-auto border-e border-border bg-surface px-3.5 py-5 text-text transition-[width,transform] duration-300 ease-in-out",
+        "fixed inset-y-0 start-0 z-50 flex h-screen flex-col gap-7 overflow-y-auto border-e border-brand-500 bg-brand-500 px-3.5 py-5 text-white transition-[width,transform] duration-300 ease-in-out",
         isMobile ? "w-[300px]" : isExpanded ? "w-[264px]" : "w-[76px]",
         isMobile && !isMobileOpen && "-translate-x-full",
       )}
     >
       <div className={cn("flex min-h-10 items-center gap-3 px-1", !showLabels && "justify-center")}>
         <div
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[11px] text-sm font-semibold text-white"
-          style={{ background: "var(--logo)" }}
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[11px] bg-white text-sm font-semibold text-brand-500"
           aria-hidden="true"
         >
           {(logoText ?? eventName).slice(0, 2).toUpperCase()}
         </div>
         {showLabels && (
           <span className="flex min-w-0 flex-col">
-            <span className="truncate text-[17px] font-medium text-text" style={{ fontFamily: "var(--font-display)" }}>
+            <span className="truncate text-[17px] font-medium text-white" style={{ fontFamily: "var(--font-display)" }}>
               {eventName}
             </span>
             {brandSubtitle && (
-              <span className="truncate text-[11px] font-medium tracking-[0.12em] text-muted">{brandSubtitle}</span>
+              <span className="truncate text-[11px] font-medium tracking-[0.12em] text-white/75">{brandSubtitle}</span>
             )}
           </span>
         )}
@@ -83,14 +82,14 @@ export function Sidebar({
 
       <nav className="flex flex-col gap-1">
         {showLabels && (
-          <span className="px-3 pb-1.5 text-[11px] font-medium tracking-[0.08em] text-muted uppercase">{sectionTitle}</span>
+          <span className="px-3 pb-1.5 text-[11px] font-medium tracking-[0.08em] text-white/75 uppercase">{sectionTitle}</span>
         )}
         {items.map((item) => {
           const active = isNavActive(item, pathname);
           const count = item.count === "meetings" ? meetings.length : null;
           const linkClass = cn(
             "flex h-[42px] w-full items-center gap-3 rounded-[10px] px-3 text-sm font-medium transition-colors",
-            active ? "bg-brand-soft text-brand-text" : "text-text-2 hover:bg-surface-2",
+            active ? "bg-white/20 text-white" : "text-white/85 hover:bg-white/10",
             !showLabels && "justify-center",
           );
           const content = (
@@ -99,7 +98,7 @@ export function Sidebar({
                 {item.icon}
               </span>
               {showLabels && <span className="min-w-0 flex-1 truncate">{item.name}</span>}
-              {showLabels && count !== null && <span className="text-xs text-muted tabular-nums">{count}</span>}
+              {showLabels && count !== null && <span className="text-xs text-white/75 tabular-nums">{count}</span>}
               {showLabels && item.external && <ExternalIcon />}
             </>
           );

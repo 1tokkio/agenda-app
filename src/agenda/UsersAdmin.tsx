@@ -39,7 +39,7 @@ export function UsersAdmin() {
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,22rem)_1fr]">
+    <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,22rem)_1fr]">
       <ComponentCard title="Crear usuario" desc={`${users.length} de ${MAX_USERS} usuarios creados`}>
         <form onSubmit={submit} className="flex flex-col gap-4 p-5 sm:p-6">
           <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-white/10">
@@ -106,7 +106,7 @@ export function UsersAdmin() {
         ) : (
           <ul className="divide-y divide-gray-100 dark:divide-white/5">
             {users.map((u) => (
-              <li key={u.id} className="flex items-center justify-between gap-3 px-5 py-4">
+              <li key={u.id} className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
                 <div className="min-w-0">
                   <p className="truncate font-medium text-gray-800 dark:text-white/90">{u.name}</p>
                   <p className="truncate text-sm text-gray-500 dark:text-gray-400">{u.email}</p>
@@ -114,9 +114,9 @@ export function UsersAdmin() {
                     Usuario: {u.username} · {u.role === "admin" ? "Administrador" : "Usuario de la agenda"}
                   </p>
                 </div>
-                <div className="flex shrink-0 items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                   <Badge size="sm" color="primary">{companyById(u.companyId)?.name}</Badge>
-                  <Button size="sm" variant="outline" onClick={() => removeUser(u.id)}>Quitar</Button>
+                  <Button size="sm" variant="outline" className="min-h-11" onClick={() => removeUser(u.id)}>Quitar</Button>
                 </div>
               </li>
             ))}

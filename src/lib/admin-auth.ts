@@ -8,7 +8,7 @@ import { staffUsers } from "@/db/schema";
 export const ADMIN_COOKIE = "admin_session";
 const SESSION_SECONDS = 60 * 60 * 12;
 
-export type AdminUser = { id: string; name: string; email: string; username: string };
+export type SessionUser = { id: string; name: string; email: string; username: string; role: "admin" | "member" };
 
 /** Clave para firmar las sesiones. Sin ADMIN_SESSION_SECRET (32 caracteres o más) no hay acceso al panel. */
 export function sessionSecretConfigured(): boolean {
@@ -36,12 +36,12 @@ function userIdFromCookie(value: string | undefined): string | null {
 }
 
 /** Usuario de la sesión actual, o null. Confirma en la base que el usuario sigue existiendo. */
-export async function currentAdmin(): Promise<AdminUser | null> {
+export async function currentUser(): Promise<SessionUser | null> {
   const jar = await cookies();
   const userId = userIdFromCookie(jar.get(ADMIN_COOKIE)?.value);
   if (!userId) return null;
   const [user] = await (await getDb())
-    .select({ id: staffUsers.id, name: staffUsers.name, email: staffUsers.email, username: staffUsers.username })
+    .select({ id: staffUsers.id, name: staffUsers.name, email: staffUsers.email, username: staffUsers.username, role: staffUsers.role })
     .from(staffUsers)
     .where(eq(staffUsers.id, userId))
     .limit(1);
@@ -56,12 +56,16 @@ export const sessionCookie = {
   secure: process.env.NODE_ENV === "production",
 };
 
-/** Para route handlers: responde 401 si no hay sesión válida. */
-export async function requireAdminApi(): Promise<NextResponse | null> {
-  if (await currentAdmin()) return null;
-  return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+/** Para route handlers de la agenda: responde 401 si no hay sesión de ningún usuario. */
+export async function requireUserApi(): Promise<NextResponse | null> {
+  if (await currentUser()) return null;
+  return NextResponse.json({ error: "Debes iniciar sesión" }, { status: 401 });
 }
 
-export async function hasAdminSession(): Promise<boolean> {
-  return (await currentAdmin()) !== null;
+/** Para route handlers del panel: responde 401 si no hay sesión, 403 si el usuario no es administrador. */
+export async function requireAdminApi(): Promise<NextResponse | null> {
+  const user = await currentUser();
+  if (!user) return NextResponse.json({ error: "Debes iniciar sesión" }, { status: 401 });
+  if (user.role !== "admin") return NextResponse.json({ error: "Solo administradores" }, { status: 403 });
+  return null;
 }

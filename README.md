@@ -49,16 +49,22 @@ Las migraciones están en la carpeta [`drizzle/`](drizzle). Para cambiar el esqu
 
 ## Acceso al panel: usuarios y contraseñas
 
-El panel `/admin` pide usuario y contraseña. Los usuarios se guardan en la base (tabla `staff_users`) y la contraseña solo se guarda como hash.
+La agenda es privada: solo entra quien tiene un usuario creado en la base (tabla `staff_users`). Hay dos tipos de acceso:
 
-- **Primer usuario:** desde la carpeta del proyecto, con la misma `DATABASE_URL` de Supabase:
+- **Administrador:** entra al panel `/admin`, crea usuarios y puede quitarlos.
+- **Usuario de la agenda:** entra a `/` y reserva reuniones. No ve el panel.
+
+La contraseña solo se guarda como hash. El límite es de 30 usuarios. Un administrador no puede quitarse a sí mismo ni dejar el panel sin administradores.
+
+- **Primer administrador:** desde la carpeta del proyecto, con la misma `DATABASE_URL` de Supabase. Sin el último argumento se crea un administrador:
 
   ```bash
   npm run db:user -- ana.perez "una-clave-segura" "Ana Pérez" ana@empresa.cl empresa-a
   ```
 
-  Los argumentos son: usuario, contraseña, nombre, correo y id de la empresa (`empresa-a` … `empresa-f`).
-- **Más usuarios:** cualquier usuario con acceso puede crearlos en **Usuarios** del panel. El límite es de 30.
+  Los argumentos son: usuario, contraseña, nombre, correo, id de la empresa (`empresa-a` … `empresa-f`) y, opcional, `member` para un usuario de la agenda.
+- **Más usuarios:** los administradores los crean en **Usuarios** del panel, eligiendo el tipo de acceso.
+- **Tótem:** la agenda pide sesión, así que el tótem también debe iniciar sesión con un usuario de la agenda.
 - `npm run db:demo` crea usuarios de prueba con la contraseña `demo-expo-2026`. No lo ejecutes contra la base de producción.
 
 ## Correo: Resend con remitente administrativo

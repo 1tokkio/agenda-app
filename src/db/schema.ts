@@ -21,18 +21,29 @@ export const rooms = pgTable("rooms", {
   capacity: integer("capacity").notNull(),
 });
 
-// Personal de las empresas con acceso al panel (máximo 30; se valida en el servicio).
-// Cada usuario entra con usuario y contraseña; la contraseña se guarda solo como hash.
-export const staffUsers = pgTable("staff_users", {
-  id: text("id").primaryKey(),
-  name: text("name").notNull(),
-  email: text("email").notNull().unique(),
-  username: text("username").notNull().unique(),
-  passwordHash: text("password_hash").notNull(),
-  companyId: text("company_id")
-    .notNull()
-    .references(() => companies.id),
-});
+/*
+ * Usuarios con acceso a la agenda (máximo 30; se valida en el servicio).
+ * - "admin": entra al panel y crea usuarios.
+ * - "member": usuario común, solo entra a la agenda y reserva.
+ * Cada usuario entra con usuario y contraseña; la contraseña se guarda solo como hash.
+ */
+export const staffUsers = pgTable(
+  "staff_users",
+  {
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    email: text("email").notNull().unique(),
+    username: text("username").notNull().unique(),
+    passwordHash: text("password_hash").notNull(),
+    role: text("role", { enum: ["admin", "member"] })
+      .notNull()
+      .default("member"),
+    companyId: text("company_id")
+      .notNull()
+      .references(() => companies.id),
+  },
+  (t) => [check("staff_role_valid", sql`${t.role} in ('admin', 'member')`)],
+);
 
 /*
  * Una reunión por bloque de 30 min en la sala (índice sobre room + starts_at) y

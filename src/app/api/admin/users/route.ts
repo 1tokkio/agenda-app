@@ -20,6 +20,7 @@ export async function POST(request: Request) {
       username: text("username"),
       password: text("password"),
       companyId: text("companyId"),
+      role: body?.role === "admin" ? "admin" : "member",
     });
     return NextResponse.json({ user }, { status: 201 });
   } catch (err) {

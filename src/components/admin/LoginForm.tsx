@@ -33,7 +33,8 @@ export function LoginForm({ eventName, subtitle, logoText }: Props) {
         body: JSON.stringify({ username, password }),
       });
       if (response.ok) {
-        router.replace("/admin");
+        const body = (await response.json().catch(() => null)) as { role?: string } | null;
+        router.replace(body?.role === "admin" ? "/admin" : "/");
         router.refresh();
         return;
       }
@@ -61,7 +62,7 @@ export function LoginForm({ eventName, subtitle, logoText }: Props) {
           {subtitle && (
             <p className="mt-1 text-xs tracking-[0.2em] text-gray-500 uppercase dark:text-gray-400">{subtitle}</p>
           )}
-          <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">Bienvenido. Ingresa con tu usuario del panel.</p>
+          <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">Bienvenido. Ingresa con el usuario que te asignó la organización.</p>
         </div>
 
         <form onSubmit={submit} className="mt-8 flex flex-col gap-5">

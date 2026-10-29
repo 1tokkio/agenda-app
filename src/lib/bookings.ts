@@ -35,8 +35,10 @@ export class BookingError extends Error {
 
 export type MeetingRecord = BookingInput & { id: string };
 export type BlockRecord = { id: string; date: string; time: string; reason: string };
-/** Usuario del personal sin datos de acceso: la contraseña nunca sale del servicio. */
-export type StaffUserRecord = { id: string; name: string; email: string; username: string; companyId: string };
+export type StaffRole = "admin" | "member";
+
+/** Usuario con acceso a la agenda, sin datos de acceso: la contraseña nunca sale del servicio. */
+export type StaffUserRecord = { id: string; name: string; email: string; username: string; role: StaffRole; companyId: string };
 
 const USERNAME = /^[a-z0-9._-]{3,30}$/;
 const MIN_PASSWORD_LENGTH = 8;
@@ -318,6 +320,7 @@ const staffColumns = {
   name: staffUsers.name,
   email: staffUsers.email,
   username: staffUsers.username,
+  role: staffUsers.role,
   companyId: staffUsers.companyId,
 };
 
@@ -325,11 +328,13 @@ export async function listStaffUsers(ctx: BookingContext): Promise<StaffUserReco
   return ctx.db.select(staffColumns).from(staffUsers).orderBy(asc(staffUsers.name));
 }
 
-/** Crea un usuario del personal con usuario y contraseña; no se permiten más de `cfg.maxUsers`. */
+/** Crea un usuario con usuario y contraseña; no se permiten más de `cfg.maxUsers`. Por defecto es usuario común. */
 export async function createStaffUser(
   ctx: BookingContext,
-  input: { name: string; email: string; username: string; password: string; companyId: string },
+  input: { name: string; email: string; username: string; password: string; companyId: string; role?: StaffRole },
 ): Promise<StaffUserRecord> {
+  const role: StaffRole = input.role ?? "member";
+  if (role !== "admin" && role !== "member") throw new BookingError("INVALID", "Rol no válido", { username: "Rol no válido" });
   const { db, cfg } = ctx;
   const fields: FieldErrors = {};
   const name = input.name.trim();
@@ -352,7 +357,7 @@ export async function createStaffUser(
           requesterName: `Ya hay ${cfg.maxUsers} usuarios creados`,
         });
       }
-      await tx.insert(staffUsers).values({ id, name, email, username, passwordHash, companyId: input.companyId });
+      await tx.insert(staffUsers).values({ id, name, email, username, passwordHash, role, companyId: input.companyId });
     });
   } catch (err) {
     if (err instanceof BookingError) throw err;
@@ -362,7 +367,7 @@ export async function createStaffUser(
     }
     throw err;
   }
-  return { id, name, email, username, companyId: input.companyId };
+  return { id, name, email, username, role, companyId: input.companyId };
 }
 
 /** Comprueba usuario y contraseña para entrar al panel. Devuelve null si no coinciden. */
@@ -377,9 +382,18 @@ export async function authenticateStaff(ctx: BookingContext, username: string, p
   return (await verifyPassword(password, passwordHash)) ? user : null;
 }
 
-export async function deleteStaffUser(ctx: BookingContext, id: string): Promise<void> {
-  const removed = await ctx.db.delete(staffUsers).where(eq(staffUsers.id, id)).returning({ id: staffUsers.id });
-  if (removed.length === 0) throw new BookingError("NOT_FOUND", "El usuario no existe");
+/** Quita un usuario. Quien administra no puede quitarse a sí mismo ni dejar el panel sin administradores. */
+export async function deleteStaffUser(ctx: BookingContext, id: string, actorId: string): Promise<void> {
+  if (id === actorId) throw new BookingError("INVALID", "No puedes quitar tu propio usuario");
+  await ctx.db.transaction(async (tx) => {
+    const [target] = await tx.select({ role: staffUsers.role }).from(staffUsers).where(eq(staffUsers.id, id)).limit(1);
+    if (!target) throw new BookingError("NOT_FOUND", "El usuario no existe");
+    if (target.role === "admin") {
+      const admins = await tx.select({ id: staffUsers.id }).from(staffUsers).where(eq(staffUsers.role, "admin"));
+      if (admins.length <= 1) throw new BookingError("INVALID", "Debe quedar al menos un administrador");
+    }
+    await tx.delete(staffUsers).where(eq(staffUsers.id, id));
+  });
 }
 
 /** Nombres de empresas por id (para listados). */

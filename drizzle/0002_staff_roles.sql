@@ -1,0 +1,2 @@
+ALTER TABLE "staff_users" ADD COLUMN "role" text DEFAULT 'member' NOT NULL;--> statement-breakpoint
+ALTER TABLE "staff_users" ADD CONSTRAINT "staff_role_valid" CHECK ("staff_users"."role" in ('admin', 'member'));

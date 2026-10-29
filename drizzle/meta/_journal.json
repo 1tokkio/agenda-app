@@ -15,6 +15,13 @@
       "when": 1793241488115,
       "tag": "0001_staff_login",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793242439602,
+      "tag": "0002_staff_roles",
+      "breakpoints": true
     }
   ]
 }

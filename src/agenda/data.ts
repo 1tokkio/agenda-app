@@ -52,5 +52,6 @@ export type StaffUser = {
   name: string;
   email: string;
   username: string;
+  role: "admin" | "member";
   companyId: string;
 };

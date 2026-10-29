@@ -19,17 +19,19 @@ export function UsersAdmin() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [companyId, setCompanyId] = useState(COMPANIES[0].id);
+  const [role, setRole] = useState<"admin" | "member">("member");
   const [errors, setErrors] = useState<FieldErrors>({});
   const full = users.length >= MAX_USERS;
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const result = await addUser({ name, email, username, password, companyId });
+    const result = await addUser({ name, email, username, password, companyId, role });
     if (result.ok) {
       setName("");
       setEmail("");
       setUsername("");
       setPassword("");
+      setRole("member");
       setErrors({});
     } else {
       setErrors(result.errors);
@@ -78,6 +80,13 @@ export function UsersAdmin() {
             {errors.password && <span role="alert" className="text-sm text-error-600">{errors.password}</span>}
           </label>
           <label className="flex flex-col gap-2">
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Tipo de acceso</span>
+            <select disabled={full} className={inputClass} value={role} onChange={(e) => setRole(e.target.value as "admin" | "member")}>
+              <option value="member">Usuario de la agenda</option>
+              <option value="admin">Administrador (puede crear usuarios)</option>
+            </select>
+          </label>
+          <label className="flex flex-col gap-2">
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Empresa</span>
             <select disabled={full} className={inputClass} value={companyId} onChange={(e) => setCompanyId(e.target.value)}>
               {COMPANIES.map((c) => (
@@ -101,7 +110,9 @@ export function UsersAdmin() {
                 <div className="min-w-0">
                   <p className="truncate font-medium text-gray-800 dark:text-white/90">{u.name}</p>
                   <p className="truncate text-sm text-gray-500 dark:text-gray-400">{u.email}</p>
-                  <p className="truncate text-sm text-gray-500 dark:text-gray-400">Usuario: {u.username}</p>
+                  <p className="truncate text-sm text-gray-500 dark:text-gray-400">
+                    Usuario: {u.username} · {u.role === "admin" ? "Administrador" : "Usuario de la agenda"}
+                  </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-3">
                   <Badge size="sm" color="primary">{companyById(u.companyId)?.name}</Badge>

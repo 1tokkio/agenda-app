@@ -26,5 +26,5 @@ export async function POST(request: Request) {
 
   const jar = await cookies();
   jar.set(ADMIN_COOKIE, sessionValue(user.id), sessionCookie);
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, role: user.role });
 }

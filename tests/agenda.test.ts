@@ -6,6 +6,7 @@ import {
   cancelMeeting,
   createMeeting,
   createStaffUser,
+  deleteStaffUser,
   listAgenda,
   listStaffUsers,
   unblockSlot,
@@ -209,6 +210,37 @@ describe("usuarios del personal", () => {
     expect(raw.rows[0].password_hash).not.toContain("clave-segura-2026");
     expect(raw.rows[0].password_hash.startsWith("scrypt$")).toBe(true);
     expect(Object.keys((await listStaffUsers(ctx))[0])).not.toContain("passwordHash");
+  });
+});
+
+describe("roles de acceso", () => {
+  it("un usuario nuevo es usuario común salvo que se indique administrador", async () => {
+    const common = await createStaffUser(ctx, staff());
+    const admin = await createStaffUser(ctx, staff({ email: "admin@empresa.cl", username: "admin.uno", role: "admin" }));
+    expect(common.role).toBe("member");
+    expect(admin.role).toBe("admin");
+    expect((await authenticateStaff(ctx, "admin.uno", "clave-segura-2026"))?.role).toBe("admin");
+  });
+
+  it("no permite quitarse a sí mismo", async () => {
+    const admin = await createStaffUser(ctx, staff({ role: "admin" }));
+    await expect(deleteStaffUser(ctx, admin.id, admin.id)).rejects.toBeInstanceOf(BookingError);
+  });
+
+  it("no deja el panel sin administradores", async () => {
+    const admin = await createStaffUser(ctx, staff({ role: "admin" }));
+    const other = await createStaffUser(ctx, staff({ email: "otro@empresa.cl", username: "otro", role: "member" }));
+    await expect(deleteStaffUser(ctx, admin.id, other.id)).rejects.toBeInstanceOf(BookingError);
+    const second = await createStaffUser(ctx, staff({ email: "dos@empresa.cl", username: "admin.dos", role: "admin" }));
+    await deleteStaffUser(ctx, admin.id, second.id);
+    expect((await listStaffUsers(ctx)).map((u) => u.id)).not.toContain(admin.id);
+  });
+
+  it("un administrador puede quitar a un usuario común", async () => {
+    const admin = await createStaffUser(ctx, staff({ role: "admin" }));
+    const common = await createStaffUser(ctx, staff({ email: "c@empresa.cl", username: "comun", role: "member" }));
+    await deleteStaffUser(ctx, common.id, admin.id);
+    expect((await listStaffUsers(ctx)).map((u) => u.id)).toEqual([admin.id]);
   });
 });
 

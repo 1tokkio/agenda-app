@@ -58,7 +58,10 @@ const USERNAME = /^[a-z0-9._-]{3,30}$/;
 const MIN_PASSWORD_LENGTH = 8;
 const PHONE = /^\+?[0-9 ()-]{6,20}$/;
 
-export type AgendaData = { meetings: MeetingRecord[]; blocks: BlockRecord[] };
+/** Reunión tal como se lista: `mine` indica si la creó quien consulta. */
+export type AgendaMeeting = MeetingRecord & { mine: boolean };
+
+export type AgendaData = { meetings: AgendaMeeting[]; blocks: BlockRecord[] };
 
 type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
 
@@ -99,8 +102,11 @@ function isUniqueViolation(err: unknown): boolean {
   return false;
 }
 
-/** Reuniones confirmadas y bloqueos de todo el evento. `full` incluye datos personales (solo para el admin). */
-export async function listAgenda(ctx: BookingContext, options: { full: boolean }): Promise<AgendaData> {
+/**
+ * Reuniones confirmadas y bloqueos de todo el evento. `full` incluye datos personales y títulos (solo para el admin).
+ * Sin `full`, el título solo se muestra a quien creó la reunión (`viewerId`); a los demás llega vacío.
+ */
+export async function listAgenda(ctx: BookingContext, options: { full: boolean; viewerId?: string }): Promise<AgendaData> {
   const { db, cfg } = ctx;
   const { from, to } = eventRange(cfg);
 
@@ -119,13 +125,15 @@ export async function listAgenda(ctx: BookingContext, options: { full: boolean }
   return {
     meetings: rows.map((r) => {
       const { date, time } = toDateTime(r.startsAt, cfg);
+      const mine = options.viewerId !== undefined && r.createdBy === options.viewerId;
       const base = {
         id: r.id,
         date,
         time,
-        title: r.title,
+        title: options.full || mine ? r.title : "",
         requesterCompany: r.requesterCompany,
         targetCompanyId: r.targetCompanyId,
+        mine,
       };
       return options.full
         ? { ...base, requesterName: r.requesterName, requesterEmail: r.requesterEmail, guestEmail: r.guestEmail ?? undefined }
@@ -213,8 +221,12 @@ async function sendConfirmations(ctx: BookingContext, meeting: BookingInput, sta
   return sent;
 }
 
-/** Crea una reunión confirmada y envía las confirmaciones (solicitante y, si existe, la otra persona). */
-export async function createMeeting(ctx: BookingContext, input: BookingInput): Promise<{ meeting: MeetingRecord; mailSent: boolean }> {
+/** Crea una reunión confirmada (a nombre de `createdBy`) y envía las confirmaciones (solicitante y, si existe, la otra persona). */
+export async function createMeeting(
+  ctx: BookingContext,
+  input: BookingInput,
+  createdBy: string,
+): Promise<{ meeting: MeetingRecord; mailSent: boolean }> {
   const { db, cfg } = ctx;
   const errors = validateBooking(input, cfg);
   if (Object.keys(errors).length > 0) throw new BookingError("INVALID", "Revisa los datos de la reunión", errors);
@@ -235,6 +247,7 @@ export async function createMeeting(ctx: BookingContext, input: BookingInput): P
         requesterCompany: values.requesterCompany,
         requesterEmail: values.requesterEmail,
         guestEmail: values.guestEmail ?? null,
+        createdBy,
         startsAt,
         endsAt: endOf(cfg, startsAt),
         status: "confirmed",

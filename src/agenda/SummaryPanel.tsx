@@ -61,22 +61,29 @@ export function SummaryPanel() {
     <section className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-2">
-          {DAYS.map((d) => (
-            <button
-              key={d}
-              type="button"
-              aria-pressed={d === day}
-              onClick={() => setDay(d)}
-              className={cn(
-                "min-h-11 rounded-lg px-4 text-sm font-medium capitalize transition",
-                d === day
-                  ? "bg-brand-500 text-white shadow-theme-xs"
-                  : "bg-white text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:ring-gray-700 dark:hover:bg-white/3",
-              )}
-            >
-              {formatDayShort(d)}
-            </button>
-          ))}
+          {DAYS.map((d) => {
+            const booked = meetings.filter((m) => m.date === d).length;
+            const free = SLOT_TIMES.length - booked - blocks.filter((b) => b.date === d).length;
+            return (
+              <button
+                key={d}
+                type="button"
+                aria-pressed={d === day}
+                onClick={() => setDay(d)}
+                className={cn(
+                  "flex min-h-11 flex-col items-start justify-center rounded-lg px-4 py-1.5 text-start transition",
+                  d === day
+                    ? "bg-brand-500 text-white shadow-theme-xs"
+                    : "bg-white text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:ring-gray-700 dark:hover:bg-white/3",
+                )}
+              >
+                <span className="text-sm font-medium capitalize">{formatDayShort(d)}</span>
+                <span className={cn("text-xs", d === day ? "text-white/80" : "text-gray-500 dark:text-gray-400")}>
+                  {booked} reuniones · {free} libres
+                </span>
+              </button>
+            );
+          })}
         </div>
         <Button variant="outline" onClick={downloadCsv} startIcon={<DownloadIcon className="size-4" />}>
           Descargar CSV

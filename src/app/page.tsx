@@ -15,7 +15,7 @@ export default async function Home() {
     <div className="untitled finland min-h-screen">
       <AgendaProvider mode="public">
         <PublicShell user={{ name: user.name, email: user.email }} isAdmin={user.role === "admin"}>
-          <PublicView me={{ companyId: user.companyId, companyName: user.companyName }} />
+          <PublicView />
         </PublicShell>
       </AgendaProvider>
     </div>

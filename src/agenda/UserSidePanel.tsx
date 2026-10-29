@@ -4,7 +4,6 @@ import { motion } from "motion/react";
 import { DAYS, SLOT_TIMES, type Meeting } from "./data";
 import { endTime, formatDayLabel, formatDayShort } from "./logic";
 import { useAgenda } from "./store";
-import { isOwnMeeting, type MyCompany } from "./UserAgenda";
 
 /** Las tarjetas entran una tras otra, de arriba abajo. */
 const container = {
@@ -18,10 +17,10 @@ const card = {
 };
 
 /** Panel de la agenda del usuario: próxima reunión, sus reuniones y la ocupación de cada día. */
-export function UserSidePanel({ me, now }: { me: MyCompany | null; now: { date: string; minutes: number } | null }) {
+export function UserSidePanel({ now }: { now: { date: string; minutes: number } | null }) {
   const { meetings, blocks } = useAgenda();
 
-  const mine = meetings.filter((m) => isOwnMeeting(m, me)).sort(byStart);
+  const mine = meetings.filter((m) => m.mine).sort(byStart);
   const next = mine.find((m) => isUpcoming(m, now)) ?? null;
 
   return (

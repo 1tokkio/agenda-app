@@ -6,11 +6,11 @@ import { SLOT_TIMES, type Meeting } from "./data";
 import { endTime, formatDayLabel } from "./logic";
 import { MeetingForm } from "./MeetingForm";
 import { UserSidePanel } from "./UserSidePanel";
-import { type MyCompany, UserAgenda, useClock } from "./UserAgenda";
+import { UserAgenda, useClock } from "./UserAgenda";
 import { useAgenda } from "./store";
 
 /** Agenda del usuario con sesión: los visitantes no ven el calendario sin iniciar sesión. */
-export function PublicView({ me }: { me: MyCompany | null }) {
+export function PublicView() {
   const { bookMeeting, slotState } = useAgenda();
   const now = useClock();
   const [selected, setSelected] = useState<{ date: string; time: string } | null>(null);
@@ -33,7 +33,6 @@ export function PublicView({ me }: { me: MyCompany | null }) {
         </section>
 
         <UserAgenda
-          me={me}
           onBookDay={bookDay}
           onSlotClick={(date, time, state) => {
             if (state.kind === "free") setSelected({ date, time });
@@ -42,7 +41,7 @@ export function PublicView({ me }: { me: MyCompany | null }) {
       </div>
 
       <div className="min-[1440px]:sticky min-[1440px]:top-6 min-[1440px]:w-[340px] min-[1440px]:shrink-0">
-        <UserSidePanel me={me} now={now} />
+        <UserSidePanel now={now} />
       </div>
 
       {selected && (

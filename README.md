@@ -70,11 +70,12 @@ Cada usuario tiene su cuenta en **Supabase Authentication** (correo y contraseñ
 ## Correo: Resend con remitente administrativo
 
 1. Crea una cuenta en [resend.com](https://resend.com).
-2. En **Domains**, agrega el dominio desde el que enviarás (por ejemplo `tudominio.cl`) y configura
-   los registros DNS que indica Resend. Espera a que el estado sea *Verified*.
+2. En **Domains**, agrega un **subdominio** para enviar (por ejemplo `send.tudominio.cl`) y configura
+   los registros DNS que indica Resend en ese subdominio. Espera a que el estado sea *Verified*.
+   Así no chocan con el SPF y DMARC del dominio principal (por ejemplo, los del correo de GoDaddy).
 3. Crea una **API Key** con permiso de envío.
 4. Define el remitente administrativo, con una dirección de ese dominio, por ejemplo
-   `AgendaFinlandia <agenda@tudominio.cl>`. Esa dirección debe existir como buzón o alias para recibir respuestas.
+   `AgendaFinlandia <agenda@send.tudominio.cl>`. Las respuestas no llegan a este remitente; el código todavía no define un `Reply-To`.
 
 Variables: `MAIL_PROVIDER=resend`, `RESEND_API_KEY`, `MAIL_FROM`. Si faltan, la reserva se guarda igual
 y el correo queda marcado como no enviado.
@@ -92,7 +93,7 @@ y el correo queda marcado como no enviado.
    | `ADMIN_SESSION_SECRET` | Clave para firmar las sesiones del panel (32 caracteres o más, por ejemplo `openssl rand -hex 32`) |
    | `MAIL_PROVIDER` | `resend` |
    | `RESEND_API_KEY` | API Key de Resend |
-   | `MAIL_FROM` | `AgendaFinlandia <agenda@tudominio.cl>` |
+   | `MAIL_FROM` | `AgendaFinlandia <agenda@send.tudominio.cl>` |
 
 4. Despliega. Las migraciones ya deben estar aplicadas en Supabase (paso anterior).
 5. Verifica `https://tu-proyecto.vercel.app/api/agenda` (debe responder JSON) y entra a `/admin`.

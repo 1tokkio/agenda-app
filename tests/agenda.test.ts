@@ -7,6 +7,7 @@ import {
   createMeeting,
   createStaffUser,
   deleteStaffUser,
+  getMeetingSummary,
   getProfile,
   updateProfile,
   listAgenda,
@@ -14,6 +15,7 @@ import {
   unblockSlot,
   updateMeeting,
 } from "../src/lib/bookings";
+import { cancelUrl, isValidCancelToken } from "../src/lib/cancel-link";
 import { config } from "../src/lib/config";
 import { slotsForDay } from "../src/lib/slots";
 import { formatHour } from "../src/lib/format";
@@ -338,5 +340,58 @@ describe("agenda pública", () => {
   it("la agenda incluye los bloqueos", async () => {
     const block = await blockSlot(ctx, { date: DAY, time: time(6), reason: "Pausa" });
     expect((await listAgenda(ctx, { full: false })).blocks.map((b) => b.id)).toEqual([block.id]);
+  });
+});
+
+describe("cancelación desde el correo", () => {
+  const SITE = "https://agenda.example";
+
+  beforeEach(() => {
+    process.env.ADMIN_SESSION_SECRET = "clave-de-prueba-de-32-caracteres-o-mas";
+  });
+
+  afterEach(() => {
+    delete process.env.ADMIN_SESSION_SECRET;
+  });
+
+  it("el correo lleva el enlace para cancelar esa reunión", async () => {
+    creator ??= (await createStaffUser(ctx, staff())).id;
+    const { meeting } = await createMeeting(ctx, input(), creator, { siteUrl: SITE });
+    const link = cancelUrl(SITE, meeting.id);
+    expect(link).toContain(`/cancelar/${meeting.id}?t=`);
+    expect(ctx.mail.sent[0].html).toContain(link!);
+    expect(ctx.mail.sent[0].text).toContain(link!);
+  });
+
+  it("sin la dirección del sitio el correo no lleva enlace", async () => {
+    await book();
+    expect(ctx.mail.sent[0].html).not.toContain("/cancelar/");
+    expect(ctx.mail.sent[0].html).toContain("escribe al equipo de organización");
+  });
+
+  it("el código del enlace solo sirve para su reunión", async () => {
+    const { meeting } = await book();
+    const other = await book({ time: time(1), targetCompanyId: "empresa-b" });
+    const token = new URL(cancelUrl(SITE, meeting.id)!).searchParams.get("t")!;
+    expect(isValidCancelToken(meeting.id, token)).toBe(true);
+    expect(isValidCancelToken(other.meeting.id, token)).toBe(false);
+    expect(isValidCancelToken(meeting.id, "codigo-inventado")).toBe(false);
+    expect(isValidCancelToken(meeting.id, undefined)).toBe(false);
+  });
+
+  it("sin clave en el servidor no hay enlace ni código válido", async () => {
+    delete process.env.ADMIN_SESSION_SECRET;
+    const { meeting } = await book();
+    expect(cancelUrl(SITE, meeting.id)).toBeNull();
+    expect(isValidCancelToken(meeting.id, "lo-que-sea")).toBe(false);
+  });
+
+  it("el resumen refleja la cancelación y el horario queda libre", async () => {
+    const { meeting } = await book();
+    expect((await getMeetingSummary(ctx, meeting.id))?.status).toBe("confirmed");
+    await cancelMeeting(ctx, meeting.id);
+    expect((await getMeetingSummary(ctx, meeting.id))?.status).toBe("cancelled");
+    await book();
+    expect(await getMeetingSummary(ctx, "no-existe")).toBeNull();
   });
 });

@@ -7,6 +7,7 @@ import type { MailProvider } from "@/mail";
 import { renderConfirmation } from "@/mail/templates/confirmation";
 import { AccountError, type AccountMetadata, type AccountProvider } from "./account-provider";
 import { validateBooking, isValidEmail, type BookingInput, type FieldErrors } from "./booking-rules";
+import { cancelUrl } from "./cancel-link";
 import { formatHour, isoDateInTimeZone } from "./format";
 import { slotsForDay } from "./slots";
 import { zonedTimeToUtc } from "./time";
@@ -190,7 +191,7 @@ function normalize(input: BookingInput): BookingInput {
   };
 }
 
-async function sendConfirmations(ctx: BookingContext, meeting: BookingInput, startsAt: Date): Promise<boolean> {
+async function sendConfirmations(ctx: BookingContext, meeting: BookingInput, startsAt: Date, cancelLink: string | null): Promise<boolean> {
   const { cfg, mail } = ctx;
   const target = cfg.companies.find((c) => c.id === meeting.targetCompanyId);
   const recipients = [meeting.requesterEmail, meeting.guestEmail].filter((e): e is string => Boolean(e?.trim()));
@@ -209,6 +210,7 @@ async function sendConfirmations(ctx: BookingContext, meeting: BookingInput, sta
             roomName: cfg.rooms[0].name,
             startsAt,
             endsAt: endOf(cfg, startsAt),
+            cancelUrl: cancelLink ?? undefined,
           },
           cfg,
         ),
@@ -221,11 +223,15 @@ async function sendConfirmations(ctx: BookingContext, meeting: BookingInput, sta
   return sent;
 }
 
-/** Crea una reunión confirmada (a nombre de `createdBy`) y envía las confirmaciones (solicitante y, si existe, la otra persona). */
+/**
+ * Crea una reunión confirmada (a nombre de `createdBy`) y envía las confirmaciones (solicitante y, si existe, la otra persona).
+ * Con `siteUrl` (el origen del sitio), el correo incluye el enlace para cancelar la reunión.
+ */
 export async function createMeeting(
   ctx: BookingContext,
   input: BookingInput,
   createdBy: string,
+  options: { siteUrl?: string } = {},
 ): Promise<{ meeting: MeetingRecord; mailSent: boolean }> {
   const { db, cfg } = ctx;
   const errors = validateBooking(input, cfg);
@@ -259,8 +265,32 @@ export async function createMeeting(
     throw err;
   }
 
-  const mailSent = await sendConfirmations(ctx, values, startsAt);
+  const cancelLink = options.siteUrl ? cancelUrl(options.siteUrl, id) : null;
+  const mailSent = await sendConfirmations(ctx, values, startsAt, cancelLink);
   return { meeting: { id, ...values }, mailSent };
+}
+
+/** Resumen de una reunión para la página de cancelación del correo (sin datos personales), o null si no existe. */
+export async function getMeetingSummary(
+  ctx: BookingContext,
+  id: string,
+): Promise<{ id: string; status: "confirmed" | "cancelled"; title: string; date: string; time: string; endTime: string; targetName: string; roomName: string; upcoming: boolean } | null> {
+  const { db, cfg } = ctx;
+  const [row] = await db.select().from(bookings).where(eq(bookings.id, id)).limit(1);
+  if (!row) return null;
+  const { date, time } = toDateTime(row.startsAt, cfg);
+  return {
+    id: row.id,
+    status: row.status,
+    title: row.title,
+    date,
+    time,
+    endTime: formatHour(row.endsAt, cfg.timezone),
+    targetName: cfg.companies.find((c) => c.id === row.targetCompanyId)?.name ?? "",
+    roomName: cfg.rooms[0].name,
+    // Todavía no empieza: solo entonces se puede cancelar desde el correo.
+    upcoming: row.startsAt.getTime() > Date.now(),
+  };
 }
 
 /** Edita una reunión existente (mismas reglas que al crearla). */

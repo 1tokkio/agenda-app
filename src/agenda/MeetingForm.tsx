@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { COMPANIES, ROOM_NAME, SLOT_MINUTES, type Meeting } from "./data";
 import { endTime, formatDayLabel } from "./logic";
 import type { BookingInput, FieldErrors } from "@/lib/booking-rules";
@@ -15,13 +15,17 @@ type Props = {
   onDone: (meeting: Meeting) => void;
   onCancelMeeting?: () => void;
   onClose: () => void;
+  /** Hora (ms) en que vence la retención del horario. Con ella, el formulario muestra la cuenta regresiva. */
+  holdUntil?: number;
+  /** Se llama una vez cuando el tiempo se agota. */
+  onHoldExpired?: () => void;
 };
 
 const inputClass =
   "h-11 w-full rounded-[10px] border border-border bg-surface px-3.5 text-base text-text placeholder:text-muted focus:outline-2 focus:outline-offset-[-1px] focus:outline-brand md:text-sm";
 
 /** Formulario de agendamiento. Lo usan la agenda del usuario y el panel de admin. */
-export function MeetingForm({ date, time, initial, submitLabel, onSubmit, onDone, onCancelMeeting, onClose }: Props) {
+export function MeetingForm({ date, time, initial, submitLabel, onSubmit, onDone, onCancelMeeting, onClose, holdUntil, onHoldExpired }: Props) {
   const [values, setValues] = useState({
     title: initial?.title ?? "",
     requesterName: initial?.requesterName ?? "",
@@ -32,6 +36,12 @@ export function MeetingForm({ date, time, initial, submitLabel, onSubmit, onDone
   });
   const [errors, setErrors] = useState<FieldErrors>({});
   const [busy, setBusy] = useState(false);
+  const secondsLeft = useHoldSeconds(holdUntil);
+  const expired = secondsLeft === 0;
+
+  useEffect(() => {
+    if (expired) onHoldExpired?.();
+  }, [expired, onHoldExpired]);
 
   function set<K extends keyof typeof values>(key: K, value: string) {
     setValues((prev) => ({ ...prev, [key]: value }));
@@ -61,6 +71,12 @@ export function MeetingForm({ date, time, initial, submitLabel, onSubmit, onDone
           {time} – {endTime(time)} · {SLOT_MINUTES} min · {ROOM_NAME}
         </span>
       </div>
+      {secondsLeft !== null && (
+        <p role="timer" className={`text-sm md:col-span-2 ${secondsLeft <= 30 ? "font-medium text-danger" : "text-text-2"}`}>
+          Reservamos este horario para ti. Confirma antes de que se agote el tiempo:{" "}
+          <span className="font-semibold tabular-nums">{formatCountdown(secondsLeft)}</span>
+        </p>
+      )}
       {errors.time && <p role="alert" className="text-sm text-danger md:col-span-2">{errors.time}</p>}
       {errors.date && <p role="alert" className="text-sm text-danger md:col-span-2">{errors.date}</p>}
 
@@ -108,7 +124,7 @@ export function MeetingForm({ date, time, initial, submitLabel, onSubmit, onDone
         </button>
         <button
           type="submit"
-          disabled={busy}
+          disabled={busy || expired}
           className="h-11 rounded-[10px] bg-brand px-5 text-sm font-semibold text-brand-ink hover:brightness-110 disabled:opacity-60"
         >
           {busy ? "Guardando…" : submitLabel}
@@ -116,6 +132,24 @@ export function MeetingForm({ date, time, initial, submitLabel, onSubmit, onDone
       </div>
     </form>
   );
+}
+
+function subscribeSecond(onChange: () => void) {
+  const timer = setInterval(onChange, 1000);
+  return () => clearInterval(timer);
+}
+
+/** Segundos que faltan para `until` (se actualiza cada segundo), o null si no hay retención. */
+function useHoldSeconds(until: number | undefined): number | null {
+  // En el servidor no hay reloj: el formulario nunca se dibuja ahí, así que basta un valor cualquiera.
+  const now = useSyncExternalStore(subscribeSecond, () => Math.floor(Date.now() / 1000), () => Math.floor((until ?? 0) / 1000));
+  if (until === undefined) return null;
+  return Math.max(0, Math.ceil(until / 1000) - now);
+}
+
+/** "2:41". */
+function formatCountdown(seconds: number): string {
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 }
 
 function Field({ label, error, hint, wide, children }: { label: string; error?: string; hint?: string; wide?: boolean; children: React.ReactNode }) {

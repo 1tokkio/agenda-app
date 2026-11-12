@@ -12,10 +12,12 @@ export async function POST(request: Request) {
   if (denied) return denied;
 
   const body = await request.json().catch(() => null);
+  const holdToken = typeof body?.holdToken === "string" ? body.holdToken : undefined;
   const user = await currentUser();
   try {
     const { meeting, mailSent } = await createMeeting(await defaultContext(), toBookingInput(body), user!.id, {
       siteUrl: new URL(request.url).origin,
+      holdToken,
     });
     return NextResponse.json({ meeting, mailSent }, { status: 201 });
   } catch (err) {

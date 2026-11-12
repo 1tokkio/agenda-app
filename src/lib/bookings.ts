@@ -1,8 +1,8 @@
-import { and, asc, count, eq, gte, lte, ne, or } from "drizzle-orm";
+import { and, asc, count, eq, gt, gte, lte, ne, or } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 import type { EventConfig } from "@config/event";
 import type { Db } from "@/db/client";
-import { blocks, bookings, companies, staffUsers } from "@/db/schema";
+import { blocks, bookings, companies, slotHolds, staffUsers } from "@/db/schema";
 import type { MailProvider } from "@/mail";
 import { renderConfirmation } from "@/mail/templates/confirmation";
 import { AccountError, type AccountMetadata, type AccountProvider } from "./account-provider";
@@ -63,7 +63,10 @@ const PHONE = /^\+?[0-9 ()-]{6,20}$/;
 /** Reunión tal como se lista: `mine` indica si la creó quien consulta. */
 export type AgendaMeeting = MeetingRecord & { mine: boolean };
 
-export type AgendaData = { meetings: AgendaMeeting[]; blocks: BlockRecord[] };
+/** Horario retenido por alguien que está llenando el formulario; `mine` es true si lo retiene quien consulta. */
+export type HoldRecord = { date: string; time: string; mine: boolean };
+
+export type AgendaData = { meetings: AgendaMeeting[]; blocks: BlockRecord[]; holds: HoldRecord[] };
 
 type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
 
@@ -108,7 +111,10 @@ function isUniqueViolation(err: unknown): boolean {
  * Reuniones confirmadas y bloqueos de todo el evento. `full` incluye datos personales y títulos (solo para el admin).
  * Sin `full`, el título solo se muestra a quien creó la reunión (`viewerId`); a los demás llega vacío.
  */
-export async function listAgenda(ctx: BookingContext, options: { full: boolean; viewerId?: string }): Promise<AgendaData> {
+export async function listAgenda(
+  ctx: BookingContext,
+  options: { full: boolean; viewerId?: string; viewerToken?: string; now?: Date },
+): Promise<AgendaData> {
   const { db, cfg } = ctx;
   const { from, to } = eventRange(cfg);
 
@@ -124,7 +130,17 @@ export async function listAgenda(ctx: BookingContext, options: { full: boolean; 
     .where(and(gte(blocks.startsAt, from), lte(blocks.startsAt, to)))
     .orderBy(asc(blocks.startsAt));
 
+  const holdRows = await db
+    .select()
+    .from(slotHolds)
+    .where(and(gt(slotHolds.expiresAt, options.now ?? new Date()), gte(slotHolds.startsAt, from), lte(slotHolds.startsAt, to)))
+    .orderBy(asc(slotHolds.startsAt));
+
   return {
+    holds: holdRows.map((h) => {
+      const { date, time } = toDateTime(h.startsAt, cfg);
+      return { date, time, mine: options.viewerToken !== undefined && h.token === options.viewerToken };
+    }),
     meetings: rows.map((r) => {
       const { date, time } = toDateTime(r.startsAt, cfg);
       const mine = options.viewerId !== undefined && r.createdBy === options.viewerId;
@@ -148,12 +164,29 @@ export async function listAgenda(ctx: BookingContext, options: { full: boolean; 
   };
 }
 
-async function assertNoOverlap(tx: Tx, ctx: BookingContext, input: BookingInput, startsAt: Date, ignoreId?: string) {
+const HELD_MESSAGE = "Otra persona está reservando este horario en este momento";
+
+async function assertNoOverlap(
+  tx: Tx,
+  ctx: BookingContext,
+  input: BookingInput,
+  startsAt: Date,
+  ignoreId?: string,
+  holdToken?: string,
+) {
   const { cfg } = ctx;
   const notSelf = ignoreId ? ne(bookings.id, ignoreId) : undefined;
 
   const [block] = await tx.select({ id: blocks.id }).from(blocks).where(eq(blocks.startsAt, startsAt)).limit(1);
   if (block) throw new BookingError("CONFLICT", "Ese horario no está disponible");
+
+  // Un horario retenido por otro dispositivo no se puede tomar hasta que reserve o venza la retención.
+  const [hold] = await tx
+    .select({ token: slotHolds.token })
+    .from(slotHolds)
+    .where(and(eq(slotHolds.roomId, roomId(cfg)), eq(slotHolds.startsAt, startsAt), gt(slotHolds.expiresAt, new Date())))
+    .limit(1);
+  if (hold && hold.token !== holdToken) throw new BookingError("CONFLICT", HELD_MESSAGE);
 
   const [roomBusy] = await tx
     .select({ id: bookings.id })
@@ -233,12 +266,13 @@ async function sendConfirmations(
 /**
  * Crea una reunión confirmada (a nombre de `createdBy`) y envía las confirmaciones (solicitante y, si existe, la otra persona).
  * Con `siteUrl` (el origen del sitio), el correo incluye el enlace para cancelar la reunión y el logo del encabezado.
+ * Con `holdToken`, la reserva usa la retención de ese dispositivo y la libera al confirmar.
  */
 export async function createMeeting(
   ctx: BookingContext,
   input: BookingInput,
   createdBy: string,
-  options: { siteUrl?: string } = {},
+  options: { siteUrl?: string; holdToken?: string } = {},
 ): Promise<{ meeting: MeetingRecord; mailSent: boolean }> {
   const { db, cfg } = ctx;
   const errors = validateBooking(input, cfg);
@@ -250,7 +284,8 @@ export async function createMeeting(
 
   try {
     await db.transaction(async (tx) => {
-      await assertNoOverlap(tx, ctx, values, startsAt);
+      await assertNoOverlap(tx, ctx, values, startsAt, undefined, options.holdToken);
+      if (options.holdToken) await tx.delete(slotHolds).where(eq(slotHolds.token, options.holdToken));
       await tx.insert(bookings).values({
         id,
         roomId: roomId(cfg),
@@ -275,6 +310,60 @@ export async function createMeeting(
   const cancelLink = options.siteUrl ? cancelUrl(options.siteUrl, id) : null;
   const mailSent = await sendConfirmations(ctx, values, startsAt, { cancelUrl: cancelLink, siteUrl: options.siteUrl });
   return { meeting: { id, ...values }, mailSent };
+}
+
+/**
+ * Retiene un horario libre para un dispositivo mientras llena el formulario. Mientras dura (`holdSeconds`),
+ * nadie más puede tomarlo; si el mismo dispositivo la pide de nuevo, se renueva. Cada dispositivo retiene un
+ * solo horario: pedir otro suelta el anterior. Devuelve cuándo vence.
+ */
+export async function acquireHold(
+  ctx: BookingContext,
+  input: { date: string; time: string },
+  token: string,
+  now: Date = new Date(),
+): Promise<{ expiresAt: Date }> {
+  const { db, cfg } = ctx;
+  if (token.length < 16 || token.length > 100) throw new BookingError("INVALID", "Dispositivo no válido");
+  const startsAt = slotStart(cfg, input.date, input.time);
+  const expiresAt = new Date(now.getTime() + cfg.holdSeconds * 1000);
+
+  try {
+    await db.transaction(async (tx) => {
+      await tx.delete(slotHolds).where(lte(slotHolds.expiresAt, now));
+
+      const [block] = await tx.select({ id: blocks.id }).from(blocks).where(eq(blocks.startsAt, startsAt)).limit(1);
+      if (block) throw new BookingError("CONFLICT", "Ese horario no está disponible");
+      const [booked] = await tx
+        .select({ id: bookings.id })
+        .from(bookings)
+        .where(and(eq(bookings.roomId, roomId(cfg)), eq(bookings.startsAt, startsAt), eq(bookings.status, "confirmed")))
+        .limit(1);
+      if (booked) throw new BookingError("CONFLICT", "Ese horario ya está reservado");
+
+      const [current] = await tx
+        .select({ token: slotHolds.token })
+        .from(slotHolds)
+        .where(and(eq(slotHolds.roomId, roomId(cfg)), eq(slotHolds.startsAt, startsAt)))
+        .limit(1);
+      if (current && current.token !== token) throw new BookingError("CONFLICT", HELD_MESSAGE);
+
+      // Un horario por dispositivo: se suelta el anterior y se retiene este (o se renueva si ya era este).
+      await tx.delete(slotHolds).where(eq(slotHolds.token, token));
+      await tx.insert(slotHolds).values({ id: randomUUID(), roomId: roomId(cfg), startsAt, token, expiresAt });
+    });
+  } catch (err) {
+    if (err instanceof BookingError) throw err;
+    // Dos dispositivos pidieron el mismo horario a la vez: el índice único deja pasar a uno solo.
+    if (isUniqueViolation(err)) throw new BookingError("CONFLICT", HELD_MESSAGE);
+    throw err;
+  }
+  return { expiresAt };
+}
+
+/** Suelta el horario que retiene un dispositivo (al cerrar el formulario). No falla si no tenía ninguno. */
+export async function releaseHold(ctx: BookingContext, token: string): Promise<void> {
+  await ctx.db.delete(slotHolds).where(eq(slotHolds.token, token));
 }
 
 /** Resumen de una reunión para la página de cancelación del correo (sin datos personales), o null si no existe. */

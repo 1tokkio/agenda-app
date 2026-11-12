@@ -50,6 +50,13 @@
       "when": 1794489597057,
       "tag": "0006_staff_email_optional",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1794492964619,
+      "tag": "0007_slot_holds",
+      "breakpoints": true
     }
   ]
 }

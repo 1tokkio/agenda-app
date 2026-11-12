@@ -45,6 +45,7 @@ const schema = z
       )
       .min(1),
     maxUsers: z.number().int().positive(),
+    holdSeconds: z.number().int().min(30).max(1800),
     accountEmailDomain: z.string().regex(/^[a-z0-9.-]+\.[a-z]{2,}$/, "usar un dominio, p. ej. usuarios.midominio.cl"),
     idleResetSeconds: z.number().int().positive(),
     theme: z.object({

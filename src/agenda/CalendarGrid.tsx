@@ -159,6 +159,17 @@ function SlotCell({
     return <div className={base}>{content}</div>;
   }
 
+  if (state.kind === "held") {
+    return (
+      <div className={base}>
+        <span className="flex h-full w-full items-center gap-2 overflow-hidden rounded-md border border-dashed border-brand-300 bg-brand-50 px-3 text-sm text-brand-700 md:px-2 md:text-xs dark:border-brand-500/40 dark:bg-brand-500/10 dark:text-brand-400">
+          <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-brand-500" aria-hidden="true" />
+          <span className="truncate font-medium">{state.mine ? "Reservando…" : "En proceso de reserva"}</span>
+        </span>
+      </div>
+    );
+  }
+
   const { meeting } = state;
   const target = companyById(meeting.targetCompanyId);
   const accent = target?.color ?? "var(--muted)";

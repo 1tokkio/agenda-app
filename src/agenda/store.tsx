@@ -5,10 +5,17 @@ import type { FieldErrors } from "@/lib/booking-rules";
 import { type Block, type Meeting, type StaffUser } from "./data";
 import type { Result } from "./types";
 
+/** Horario que alguien está reservando en este momento; `mine` es true si es este dispositivo. */
+export type Hold = { date: string; time: string; mine: boolean };
+
 export type SlotState =
   | { kind: "free" }
   | { kind: "booked"; meeting: Meeting }
-  | { kind: "blocked"; block: Block };
+  | { kind: "blocked"; block: Block }
+  | { kind: "held"; mine: boolean };
+
+/** Resultado de retener un horario: cuántos segundos queda retenido, o por qué no se pudo. */
+export type HoldResult = { ok: true; ttlSeconds: number } | { ok: false; error: string };
 
 export type AgendaMode = "public" | "admin";
 
@@ -20,9 +27,14 @@ type AgendaStore = {
   mode: AgendaMode;
   meetings: Meeting[];
   blocks: Block[];
+  holds: Hold[];
   users: StaffUser[];
   loaded: boolean;
   slotState: (date: string, time: string) => SlotState;
+  /** Retiene un horario libre mientras se llena el formulario: nadie más puede tomarlo hasta que venza o se suelte. */
+  holdSlot: (date: string, time: string) => Promise<HoldResult>;
+  /** Suelta el horario que retiene este dispositivo (al cerrar el formulario sin reservar). */
+  releaseSlot: () => Promise<void>;
   bookMeeting: (input: MeetingInput) => Promise<Result<Meeting>>;
   updateMeeting: (id: string, input: MeetingInput) => Promise<Result<Meeting>>;
   cancelMeeting: (id: string) => Promise<void>;
@@ -34,11 +46,26 @@ type AgendaStore = {
 
 const AgendaContext = createContext<AgendaStore | null>(null);
 
-type AgendaPayload = { meetings: Meeting[]; blocks: Block[]; users?: StaffUser[] };
+type AgendaPayload = { meetings: Meeting[]; blocks: Block[]; holds?: Hold[]; users?: StaffUser[] };
+
+/** Cada cuánto se consulta la agenda: lo justo para que un segundo dispositivo vea pronto los horarios en proceso. */
+const REFRESH_MS = 5_000;
+
+/** Identificador de este dispositivo (una vez por carga de la página). Distingue quién retiene un horario. */
+function makeDeviceToken(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") return crypto.randomUUID();
+  // Páginas sin contexto seguro (http en red local) no tienen randomUUID.
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+}
 
 /** Agenda desde la API: pública o completa para el admin. Devuelve null si la llamada falla. */
-async function fetchAgenda(mode: AgendaMode): Promise<AgendaPayload | null> {
-  const response = await fetch(mode === "admin" ? "/api/admin/agenda" : "/api/agenda", { cache: "no-store" }).catch(() => null);
+async function fetchAgenda(mode: AgendaMode, token: string): Promise<AgendaPayload | null> {
+  const response = await fetch(mode === "admin" ? "/api/admin/agenda" : "/api/agenda", {
+    cache: "no-store",
+    headers: { "x-hold-token": token },
+  }).catch(() => null);
   if (!response?.ok) return null;
   return (await response.json()) as AgendaPayload;
 }
@@ -65,39 +92,57 @@ async function send<T>(url: string, init?: RequestInit): Promise<{ ok: true; dat
 
 /**
  * Estado de la agenda desde la API. La vista pública recibe reuniones sin datos personales;
- * el admin recibe todo y además los usuarios. Se actualiza al guardar cambios y cada 20 s.
+ * el admin recibe todo y además los usuarios. Se actualiza al guardar cambios y cada pocos segundos, para que
+ * dos dispositivos abiertos a la vez vean los horarios que el otro está reservando.
  */
 export function AgendaProvider({ mode, children }: { mode: AgendaMode; children: React.ReactNode }) {
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [blocks, setBlocks] = useState<Block[]>([]);
+  const [holds, setHolds] = useState<Hold[]>([]);
   const [users, setUsers] = useState<StaffUser[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [token] = useState(makeDeviceToken);
 
   const apply = useCallback((data: AgendaPayload) => {
     setMeetings(data.meetings);
     setBlocks(data.blocks);
+    setHolds(data.holds ?? []);
     setUsers(data.users ?? []);
     setLoaded(true);
   }, []);
 
   const refresh = useCallback(async () => {
-    const data = await fetchAgenda(mode);
+    const data = await fetchAgenda(mode, token);
     if (data) apply(data);
-  }, [mode, apply]);
+  }, [mode, token, apply]);
 
   useEffect(() => {
     let active = true;
     const load = async () => {
-      const data = await fetchAgenda(mode);
+      const data = await fetchAgenda(mode, token);
       if (active && data) apply(data);
     };
     void load();
-    const timer = setInterval(() => void load(), 20_000);
+    const timer = setInterval(() => void load(), REFRESH_MS);
     return () => {
       active = false;
       clearInterval(timer);
     };
-  }, [mode, apply]);
+  }, [mode, token, apply]);
+
+  // Si se cierra la pestaña con un formulario abierto, el horario se suelta de inmediato en vez de esperar al vencimiento.
+  useEffect(() => {
+    const release = () => {
+      void fetch("/api/agenda/holds", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token }),
+        keepalive: true,
+      }).catch(() => undefined);
+    };
+    window.addEventListener("pagehide", release);
+    return () => window.removeEventListener("pagehide", release);
+  }, [token]);
 
   const slotState = useCallback<AgendaStore["slotState"]>(
     (date, time) => {
@@ -105,18 +150,38 @@ export function AgendaProvider({ mode, children }: { mode: AgendaMode; children:
       if (meeting) return { kind: "booked", meeting };
       const block = blocks.find((b) => b.date === date && b.time === time);
       if (block) return { kind: "blocked", block };
+      const hold = holds.find((h) => h.date === date && h.time === time);
+      if (hold) return { kind: "held", mine: hold.mine };
       return { kind: "free" };
     },
-    [meetings, blocks],
+    [meetings, blocks, holds],
   );
+
+  const holdSlot = useCallback<AgendaStore["holdSlot"]>(
+    async (date, time) => {
+      const result = await send<{ ttlSeconds: number }>("/api/agenda/holds", { method: "POST", body: JSON.stringify({ date, time, token }) });
+      // Se actualiza de inmediato: si otro dispositivo lo tomó, el horario deja de verse libre.
+      await refresh();
+      return result.ok ? { ok: true, ttlSeconds: result.data.ttlSeconds } : { ok: false, error: result.errors.time ?? "No se pudo reservar el horario." };
+    },
+    [token, refresh],
+  );
+
+  const releaseSlot = useCallback<AgendaStore["releaseSlot"]>(async () => {
+    await send("/api/agenda/holds", { method: "DELETE", body: JSON.stringify({ token }) });
+    await refresh();
+  }, [token, refresh]);
 
   const bookMeeting = useCallback<AgendaStore["bookMeeting"]>(
     async (input) => {
-      const result = await send<{ meeting: Meeting }>("/api/agenda/bookings", { method: "POST", body: JSON.stringify(input) });
+      const result = await send<{ meeting: Meeting }>("/api/agenda/bookings", {
+        method: "POST",
+        body: JSON.stringify({ ...input, holdToken: token }),
+      });
       await refresh();
       return result.ok ? { ok: true, value: result.data.meeting } : { ok: false, errors: result.errors };
     },
-    [refresh],
+    [token, refresh],
   );
 
   const updateMeeting = useCallback<AgendaStore["updateMeeting"]>(
@@ -175,9 +240,12 @@ export function AgendaProvider({ mode, children }: { mode: AgendaMode; children:
       mode,
       meetings,
       blocks,
+      holds,
       users,
       loaded,
       slotState,
+      holdSlot,
+      releaseSlot,
       bookMeeting,
       updateMeeting,
       cancelMeeting,
@@ -186,7 +254,7 @@ export function AgendaProvider({ mode, children }: { mode: AgendaMode; children:
       addUser,
       removeUser,
     }),
-    [mode, meetings, blocks, users, loaded, slotState, bookMeeting, updateMeeting, cancelMeeting, blockSlot, unblockSlot, addUser, removeUser],
+    [mode, meetings, blocks, holds, users, loaded, slotState, holdSlot, releaseSlot, bookMeeting, updateMeeting, cancelMeeting, blockSlot, unblockSlot, addUser, removeUser],
   );
 
   return <AgendaContext.Provider value={value}>{children}</AgendaContext.Provider>;

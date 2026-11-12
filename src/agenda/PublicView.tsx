@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Sheet } from "@/components/ui/Sheet";
 import { ROOM_NAME, SLOT_MINUTES, SLOT_TIMES, type Meeting } from "./data";
 import { endTime, formatDayLabel } from "./logic";
@@ -11,15 +11,52 @@ import { useAgenda } from "./store";
 
 /** Agenda del usuario con sesión: los visitantes no ven el calendario sin iniciar sesión. */
 export function PublicView() {
-  const { bookMeeting, slotState } = useAgenda();
+  const { bookMeeting, slotState, holdSlot, releaseSlot } = useAgenda();
   const now = useClock();
-  const [selected, setSelected] = useState<{ date: string; time: string } | null>(null);
+  const [selected, setSelected] = useState<{ date: string; time: string; until: number } | null>(null);
   const [confirmed, setConfirmed] = useState<Meeting | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [opening, setOpening] = useState(false);
+
+  useEffect(() => {
+    if (!notice) return;
+    const timer = setTimeout(() => setNotice(null), 8000);
+    return () => clearTimeout(timer);
+  }, [notice]);
+
+  // Abrir un horario lo retiene para este dispositivo: si otro ya lo estaba reservando, se avisa y no se abre.
+  async function openSlot(date: string, time: string) {
+    if (opening) return;
+    setOpening(true);
+    try {
+      const result = await holdSlot(date, time);
+      if (!result.ok) {
+        setNotice(result.error);
+        return;
+      }
+      setNotice(null);
+      setSelected({ date, time, until: Date.now() + result.ttlSeconds * 1000 });
+    } finally {
+      setOpening(false);
+    }
+  }
+
+  // Cerrar sin reservar suelta el horario enseguida para que otro dispositivo pueda tomarlo.
+  const closeSheet = useCallback(() => {
+    setSelected(null);
+    void releaseSlot();
+  }, [releaseSlot]);
+
+  const holdExpired = useCallback(() => {
+    setSelected(null);
+    void releaseSlot();
+    setNotice("Se agotó el tiempo para confirmar y el horario volvió a quedar disponible. Elige un bloque para empezar de nuevo.");
+  }, [releaseSlot]);
 
   // Primer horario libre del día: lo usa el botón "Agendar reunión".
   const bookDay = (date: string) => {
     const time = SLOT_TIMES.find((t) => slotState(date, t).kind === "free");
-    if (time) setSelected({ date, time });
+    if (time) void openSlot(date, time);
   };
 
   return (
@@ -32,10 +69,19 @@ export function PublicView() {
           <p className="mt-1.5 text-sm text-muted md:text-[15px]">Reserva bloques de {SLOT_MINUTES} minutos en la sala durante los 3 días del evento.</p>
         </section>
 
+        {notice && (
+          <div role="alert" className="flex items-start justify-between gap-3 rounded-xl border border-danger-bd bg-danger-soft px-4 py-3 text-sm text-danger">
+            <span>{notice}</span>
+            <button type="button" onClick={() => setNotice(null)} aria-label="Cerrar aviso" className="shrink-0 font-semibold">
+              ✕
+            </button>
+          </div>
+        )}
+
         <UserAgenda
           onBookDay={bookDay}
           onSlotClick={(date, time, state) => {
-            if (state.kind === "free") setSelected({ date, time });
+            if (state.kind === "free") void openSlot(date, time);
           }}
         />
       </div>
@@ -45,7 +91,7 @@ export function PublicView() {
       </div>
 
       {selected && (
-        <Sheet title="Agendar reunión" description="Confirma el bloque y con quién te reunirás." onClose={() => setSelected(null)}>
+        <Sheet title="Agendar reunión" description="Confirma el bloque y con quién te reunirás." onClose={closeSheet}>
           <MeetingForm
             date={selected.date}
             time={selected.time}
@@ -55,7 +101,9 @@ export function PublicView() {
               setSelected(null);
               setConfirmed(meeting);
             }}
-            onClose={() => setSelected(null)}
+            onClose={closeSheet}
+            holdUntil={selected.until}
+            onHoldExpired={holdExpired}
           />
         </Sheet>
       )}

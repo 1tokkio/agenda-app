@@ -232,6 +232,23 @@ function SlotCell({
     );
   }
 
+  // Alguien está llenando el formulario de este horario: nadie más puede tomarlo hasta que reserve o venza el tiempo.
+  if (state.kind === "held") {
+    return (
+      <div
+        className="flex h-full min-w-0 flex-col justify-center rounded-lg border border-dashed border-brand px-2.5 py-1"
+        style={{ background: "var(--brand-soft)" }}
+        aria-label={`${state.mine ? "Reservando este horario" : "En proceso de reserva"}, ${range}`}
+      >
+        <span className="flex items-center gap-1.5 truncate text-xs font-medium text-brand-text">
+          <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-brand" aria-hidden="true" />
+          {state.mine ? "Reservando…" : "En proceso"}
+        </span>
+        <span className="truncate text-[11px] text-muted tabular-nums">{range}</span>
+      </div>
+    );
+  }
+
   // Solo quien creó la reunión ve su título; los demás ven "Reservado".
   if (state.meeting.mine) {
     return (
@@ -282,6 +299,9 @@ function Legend() {
       </LegendItem>
       <LegendItem>
         <span className="h-3.5 w-3.5 rounded border" style={{ background: "var(--taken-bg)", borderColor: "var(--taken-bd)" }} /> Reservado
+      </LegendItem>
+      <LegendItem>
+        <span className="h-3.5 w-3.5 rounded border border-dashed border-brand" style={{ background: "var(--brand-soft)" }} /> En proceso
       </LegendItem>
       <LegendItem>
         <span className="hatch h-3.5 w-3.5 rounded border border-border" /> No disponible

@@ -91,6 +91,28 @@ export const bookings = pgTable(
   ],
 );
 
+/*
+ * Reserva en curso: mientras alguien llena el formulario, el horario queda retenido para su dispositivo
+ * (`token`) y nadie más puede tomarlo. Vence sola en `expires_at`; no hace falta ninguna tarea que la limpie.
+ * Un horario tiene a lo sumo una retención, y cada dispositivo retiene a lo sumo un horario.
+ */
+export const slotHolds = pgTable(
+  "slot_holds",
+  {
+    id: text("id").primaryKey(),
+    roomId: text("room_id")
+      .notNull()
+      .references(() => rooms.id),
+    startsAt: instant("starts_at").notNull(),
+    token: text("token").notNull(),
+    expiresAt: instant("expires_at").notNull(),
+  },
+  (t) => [
+    uniqueIndex("slot_holds_room_slot").on(t.roomId, t.startsAt),
+    uniqueIndex("slot_holds_token").on(t.token),
+  ],
+);
+
 // Horarios bloqueados (publicidad, pantalla ocupada, etc.). Un bloqueo por bloque de tiempo.
 export const blocks = pgTable(
   "blocks",

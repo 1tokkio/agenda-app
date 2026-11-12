@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   BookingError,
+  acquireHold,
+  releaseHold,
   authenticateStaff,
   blockSlot,
   cancelMeeting,
@@ -477,5 +479,107 @@ describe("usuarios sin correo y empresas del evento", () => {
     expect((await authenticateStaff(ctx, "ana.perfil", "clave-segura-2026"))?.id).toBe(user.id);
     expect((await updateProfile(ctx, user.id, { ...profile, email: "nuevo@empresa.cl" })).email).toBe("nuevo@empresa.cl");
     expect([...ctx.accounts.store.values()][0].email).toBe("nuevo@empresa.cl");
+  });
+});
+
+describe("reserva en curso: retención del horario", () => {
+  const A = "dispositivo-a-0123456789";
+  const B = "dispositivo-b-0123456789";
+  const slot = (i = 0) => ({ date: DAY, time: time(i) });
+  const MINUTE = 60_000;
+
+  async function bookWith(token: string | undefined, overrides: Partial<BookingInput> = {}) {
+    creator ??= (await createStaffUser(ctx, staff())).id;
+    return createMeeting(ctx, input(overrides), creator, { holdToken: token });
+  }
+
+  it("un horario retenido no lo puede tomar ni retener otro dispositivo", async () => {
+    await acquireHold(ctx, slot(), A);
+    await expectError(acquireHold(ctx, slot(), B), "CONFLICT");
+    await expectError(bookWith(B), "CONFLICT");
+    await expectError(bookWith(undefined), "CONFLICT");
+    expect((await listAgenda(ctx, { full: false })).meetings).toHaveLength(0);
+  });
+
+  it("quien lo retiene puede reservarlo, y la retención se consume", async () => {
+    await acquireHold(ctx, slot(), A);
+    await bookWith(A);
+    expect((await listAgenda(ctx, { full: false })).holds).toEqual([]);
+    expect((await listAgenda(ctx, { full: true })).meetings).toHaveLength(1);
+  });
+
+  it("al soltarlo, otro dispositivo puede tomarlo", async () => {
+    await acquireHold(ctx, slot(), A);
+    await releaseHold(ctx, A);
+    await acquireHold(ctx, slot(), B);
+    await releaseHold(ctx, "nunca-retuvo-nada-0123456789");
+  });
+
+  it("si nadie reserva, la retención vence y el horario vuelve a estar libre", async () => {
+    const hace10min = new Date(Date.now() - 10 * MINUTE);
+    await acquireHold(ctx, slot(), A, hace10min);
+    expect((await listAgenda(ctx, { full: false })).holds).toEqual([]);
+    await acquireHold(ctx, slot(), B);
+    await expectError(bookWith(A), "CONFLICT");
+    await bookWith(B);
+  });
+
+  it("la retención dura lo que indica la configuración", async () => {
+    const before = Date.now();
+    const { expiresAt } = await acquireHold(ctx, slot(), A);
+    expect(expiresAt.getTime() - before).toBeGreaterThanOrEqual(config.holdSeconds * 1000 - 50);
+    expect(expiresAt.getTime() - before).toBeLessThan(config.holdSeconds * 1000 + 5000);
+  });
+
+  it("volver a pedir el mismo horario lo renueva, y pedir otro suelta el anterior", async () => {
+    await acquireHold(ctx, slot(0), A);
+    await acquireHold(ctx, slot(0), A);
+    await acquireHold(ctx, slot(1), A);
+    expect((await listAgenda(ctx, { full: false, viewerToken: A })).holds).toEqual([{ date: DAY, time: time(1), mine: true }]);
+    await acquireHold(ctx, slot(0), B);
+  });
+
+  it("la agenda indica cuáles retiene quien consulta y cuáles otro", async () => {
+    await acquireHold(ctx, slot(0), A);
+    await acquireHold(ctx, slot(1), B);
+    const view = (await listAgenda(ctx, { full: false, viewerToken: A })).holds;
+    expect(view).toEqual([
+      { date: DAY, time: time(0), mine: true },
+      { date: DAY, time: time(1), mine: false },
+    ]);
+    expect((await listAgenda(ctx, { full: false })).holds.every((h) => !h.mine)).toBe(true);
+  });
+
+  it("no se retiene un horario ya reservado, bloqueado o que no existe", async () => {
+    await book({ time: time(0) });
+    await blockSlot(ctx, { date: DAY, time: time(1), reason: "Pausa" });
+    await expectError(acquireHold(ctx, slot(0), A), "CONFLICT");
+    await expectError(acquireHold(ctx, slot(1), A), "CONFLICT");
+    await expectError(acquireHold(ctx, { date: DAY, time: "10:10" }, A), "INVALID");
+    await expectError(acquireHold(ctx, slot(2), "corto"), "INVALID");
+  });
+
+  it("dos dispositivos que piden el mismo horario a la vez: solo uno lo logra", async () => {
+    const results = await Promise.allSettled([acquireHold(ctx, slot(3), A), acquireHold(ctx, slot(3), B)]);
+    expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+    const lost = results.find((r) => r.status === "rejected") as PromiseRejectedResult;
+    expect(lost.reason).toBeInstanceOf(BookingError);
+    expect((await listAgenda(ctx, { full: false })).holds).toHaveLength(1);
+  });
+
+  it("dos reservas simultáneas del mismo horario: solo una queda guardada", async () => {
+    creator ??= (await createStaffUser(ctx, staff())).id;
+    const results = await Promise.allSettled([
+      createMeeting(ctx, input({ targetCompanyId: "empresa-a" }), creator),
+      createMeeting(ctx, input({ targetCompanyId: "empresa-b" }), creator),
+    ]);
+    expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+    expect((await listAgenda(ctx, { full: true })).meetings).toHaveLength(1);
+  });
+
+  it("el admin no puede mover una reunión a un horario que alguien está reservando", async () => {
+    const { meeting } = await book({ time: time(0) });
+    await acquireHold(ctx, slot(1), A);
+    await expectError(updateMeeting(ctx, meeting.id, input({ time: time(1) })), "CONFLICT");
   });
 });

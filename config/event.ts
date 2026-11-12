@@ -56,6 +56,7 @@ export type EventConfig = {
   companies: Company[];
   maxUsers: number; // máximo de usuarios del personal
   accountEmailDomain: string; // dominio de la dirección interna de las cuentas creadas sin correo
+  holdSeconds: number; // segundos que un horario queda retenido mientras se llena el formulario de reserva
   idleResetSeconds: number; // reinicio del tótem por inactividad
   theme: Theme;
 };
@@ -91,6 +92,7 @@ export const eventConfig: EventConfig = {
 
   maxUsers: 30, // usuarios del personal de las empresas
 
+  holdSeconds: 180, // 3 minutos para completar la reserva; después el horario vuelve a quedar libre
   accountEmailDomain: "usuarios.agendafinlandia.cl", // usuario@este-dominio, solo para entrar; no recibe correo
   idleResetSeconds: 30,
 

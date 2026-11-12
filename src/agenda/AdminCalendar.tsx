@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Button from "@/components/ui/button/Button";
 import { Modal } from "@/components/ui/modal";
 import { CalendarGrid } from "./CalendarGrid";
@@ -13,7 +13,7 @@ import { useAgenda, type SlotState } from "./store";
 
 type Dialog =
   | { kind: "elegir"; date: string; time: string }
-  | { kind: "agendar"; date: string; time: string }
+  | { kind: "agendar"; date: string; time: string; until: number }
   | { kind: "editar"; meeting: Meeting }
   | { kind: "bloquear"; date: string; time: string }
   | { kind: "desbloquear"; block: Block };
@@ -21,7 +21,32 @@ type Dialog =
 /** Calendario del admin: igual que el público, más edición, bloqueos y liberación de horarios. */
 export function AdminCalendar() {
   const [dialog, setDialog] = useState<Dialog | null>(null);
-  const { bookMeeting, updateMeeting, cancelMeeting, blockSlot, unblockSlot } = useAgenda();
+  const { bookMeeting, updateMeeting, cancelMeeting, blockSlot, unblockSlot, holdSlot, releaseSlot } = useAgenda();
+  const [notice, setNotice] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!notice) return;
+    const timer = setTimeout(() => setNotice(null), 8000);
+    return () => clearTimeout(timer);
+  }, [notice]);
+
+  // Elegir "Agendar reunión" retiene el horario para este dispositivo mientras se llena el formulario.
+  async function startBooking(date: string, time: string) {
+    const result = await holdSlot(date, time);
+    if (!result.ok) {
+      setDialog(null);
+      setNotice(result.error);
+      return;
+    }
+    setNotice(null);
+    setDialog({ kind: "agendar", date, time, until: Date.now() + result.ttlSeconds * 1000 });
+  }
+
+  function holdExpired() {
+    setDialog(null);
+    void releaseSlot();
+    setNotice("Se agotó el tiempo para confirmar y el horario volvió a quedar disponible.");
+  }
 
   function handleSlot(date: string, time: string, state: SlotState) {
     if (state.kind === "free") setDialog({ kind: "elegir", date, time });
@@ -29,11 +54,24 @@ export function AdminCalendar() {
     if (state.kind === "blocked") setDialog({ kind: "desbloquear", block: state.block });
   }
 
-  const close = () => setDialog(null);
+  // Cerrar el formulario sin reservar suelta el horario enseguida.
+  const close = () => {
+    if (dialog?.kind === "agendar") void releaseSlot();
+    setDialog(null);
+  };
 
   return (
     <div className="flex flex-col gap-8">
       <SummaryPanel />
+
+      {notice && (
+        <div role="alert" className="flex items-start justify-between gap-3 rounded-xl border border-error-200 bg-error-50 px-4 py-3 text-sm text-error-700 dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-400">
+          <span>{notice}</span>
+          <button type="button" onClick={() => setNotice(null)} aria-label="Cerrar aviso" className="shrink-0 font-semibold">
+            ✕
+          </button>
+        </div>
+      )}
 
       <div>
         <h2 className="mb-2 text-xl font-semibold text-gray-800 dark:text-white/90">Calendario</h2>
@@ -51,7 +89,7 @@ export function AdminCalendar() {
             <p className="text-base text-gray-500 dark:text-gray-400">
               {formatDayLabel(dialog.date)} · {dialog.time} – {endTime(dialog.time)}
             </p>
-            <Button className="min-h-12" onClick={() => setDialog({ kind: "agendar", date: dialog.date, time: dialog.time })}>
+            <Button className="min-h-12" onClick={() => void startBooking(dialog.date, dialog.time)}>
               Agendar reunión
             </Button>
             <Button variant="outline" className="min-h-12" onClick={() => setDialog({ kind: "bloquear", date: dialog.date, time: dialog.time })}>
@@ -70,6 +108,8 @@ export function AdminCalendar() {
             onSubmit={bookMeeting}
             onDone={close}
             onClose={close}
+            holdUntil={dialog.until}
+            onHoldExpired={holdExpired}
           />
         )}
       </Modal>

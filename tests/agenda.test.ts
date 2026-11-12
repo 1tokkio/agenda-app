@@ -364,6 +364,15 @@ describe("cancelación desde el correo", () => {
     expect(ctx.mail.sent[0].text).toContain(link!);
   });
 
+  it("el correo lleva el logo del encabezado desde el sitio, y sin sitio no hay imagen", async () => {
+    creator ??= (await createStaffUser(ctx, staff())).id;
+    await createMeeting(ctx, input(), creator, { siteUrl: `${SITE}/` });
+    expect(ctx.mail.sent[0].html).toContain(`<img src="${SITE}/logo-correo.png"`);
+    ctx.mail.sent.length = 0;
+    await createMeeting(ctx, input({ time: time(1), targetCompanyId: "empresa-b" }), creator);
+    expect(ctx.mail.sent[0].html).not.toContain("<img");
+  });
+
   it("sin la dirección del sitio el correo no lleva enlace", async () => {
     await book();
     expect(ctx.mail.sent[0].html).not.toContain("/cancelar/");

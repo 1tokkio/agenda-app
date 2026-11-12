@@ -13,6 +13,8 @@ export type ConfirmationData = {
   endsAt: Date;
   /** Página para cancelar la reunión. Sin ella, el correo indica escribir a la organización. */
   cancelUrl?: string;
+  /** Imagen del encabezado (dirección completa, p. ej. https://midominio.cl/logo-correo.png). Sin ella, solo texto. */
+  logoUrl?: string;
 };
 
 function escapeHtml(value: string): string {
@@ -71,12 +73,24 @@ export function renderConfirmation(data: ConfirmationData, cfg: EventConfig): Ma
     : `
             <p style="margin:28px 0 0;color:${colors.textMuted};font-size:13px;">Si necesitas cancelar, escribe al equipo de organización.</p>`;
 
+  // Muchos clientes bloquean las imágenes hasta que se autorizan: el nombre en texto sigue al lado como respaldo.
+  const logoHtml = data.logoUrl
+    ? `
+              <td style="padding-right:12px;vertical-align:middle;"><img src="${escapeHtml(data.logoUrl)}" alt="Finlandia" width="44" height="29" style="display:block;border:0;width:44px;height:29px;"></td>`
+    : "";
+
   const html = `<!doctype html>
 <html lang="es">
   <body style="margin:0;padding:24px 12px;background:${OUTER_BG};font-family:${fonts.body};">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;margin:0 auto;background:${colors.surface};border-radius:${radius};overflow:hidden;">
       <tr>
-        <td style="padding:18px 32px;background:${colors.primary};color:#ffffff;font-size:14px;font-weight:700;">${escapeHtml(cfg.name)} · ${escapeHtml(cfg.subtitle)}</td>
+        <td style="padding:16px 32px;background:${colors.primary};color:#ffffff;font-size:14px;font-weight:700;">
+          <table role="presentation" cellpadding="0" cellspacing="0">
+            <tr>${logoHtml}
+              <td style="color:#ffffff;font-size:14px;font-weight:700;vertical-align:middle;">${escapeHtml(cfg.name)} · ${escapeHtml(cfg.subtitle)}</td>
+            </tr>
+          </table>
+        </td>
       </tr>
       <tr>
         <td style="padding:32px;">

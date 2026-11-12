@@ -192,7 +192,12 @@ function normalize(input: BookingInput): BookingInput {
   };
 }
 
-async function sendConfirmations(ctx: BookingContext, meeting: BookingInput, startsAt: Date, cancelLink: string | null): Promise<boolean> {
+async function sendConfirmations(
+  ctx: BookingContext,
+  meeting: BookingInput,
+  startsAt: Date,
+  links: { cancelUrl: string | null; siteUrl: string | undefined },
+): Promise<boolean> {
   const { cfg, mail } = ctx;
   const target = cfg.companies.find((c) => c.id === meeting.targetCompanyId);
   const recipients = [meeting.requesterEmail, meeting.guestEmail].filter((e): e is string => Boolean(e?.trim()));
@@ -211,7 +216,8 @@ async function sendConfirmations(ctx: BookingContext, meeting: BookingInput, sta
             roomName: cfg.rooms[0].name,
             startsAt,
             endsAt: endOf(cfg, startsAt),
-            cancelUrl: cancelLink ?? undefined,
+            cancelUrl: links.cancelUrl ?? undefined,
+            logoUrl: links.siteUrl ? `${links.siteUrl.replace(/\/+$/, "")}/logo-correo.png` : undefined,
           },
           cfg,
         ),
@@ -226,7 +232,7 @@ async function sendConfirmations(ctx: BookingContext, meeting: BookingInput, sta
 
 /**
  * Crea una reunión confirmada (a nombre de `createdBy`) y envía las confirmaciones (solicitante y, si existe, la otra persona).
- * Con `siteUrl` (el origen del sitio), el correo incluye el enlace para cancelar la reunión.
+ * Con `siteUrl` (el origen del sitio), el correo incluye el enlace para cancelar la reunión y el logo del encabezado.
  */
 export async function createMeeting(
   ctx: BookingContext,
@@ -267,7 +273,7 @@ export async function createMeeting(
   }
 
   const cancelLink = options.siteUrl ? cancelUrl(options.siteUrl, id) : null;
-  const mailSent = await sendConfirmations(ctx, values, startsAt, cancelLink);
+  const mailSent = await sendConfirmations(ctx, values, startsAt, { cancelUrl: cancelLink, siteUrl: options.siteUrl });
   return { meeting: { id, ...values }, mailSent };
 }
 

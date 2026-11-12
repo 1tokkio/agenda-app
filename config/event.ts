@@ -67,7 +67,7 @@ export const eventConfig: EventConfig = {
   dates: { start: "2026-11-18", end: "2026-11-20" },
 
   schedule: {
-    slotMinutes: 30, // cada reunión dura 30 minutos (un bloque)
+    slotMinutes: 45, // cada reunión dura 45 minutos (un bloque)
     days: [
       { date: "2026-11-18", start: "10:00", end: "19:00" },
       { date: "2026-11-19", start: "10:00", end: "19:00" },

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { COMPANIES, type Meeting } from "./data";
+import { COMPANIES, SLOT_MINUTES, type Meeting } from "./data";
 import { endTime, formatDayLabel } from "./logic";
 import type { BookingInput, FieldErrors } from "@/lib/booking-rules";
 import { type Result } from "./types";
@@ -58,7 +58,7 @@ export function MeetingForm({ date, time, initial, submitLabel, onSubmit, onDone
       <div className="flex flex-col gap-0.5 rounded-[12px] bg-brand-soft px-4 py-3 md:col-span-2">
         <span className="text-[15px] font-semibold text-brand-text">{formatDayLabel(date)}</span>
         <span className="text-sm text-brand-text tabular-nums">
-          {time} – {endTime(time)} · 30 min · Sala de reuniones
+          {time} – {endTime(time)} · {SLOT_MINUTES} min · Sala de reuniones
         </span>
       </div>
       {errors.time && <p role="alert" className="text-sm text-danger md:col-span-2">{errors.time}</p>}

@@ -18,6 +18,7 @@ import {
 import { cancelUrl, isValidCancelToken } from "../src/lib/cancel-link";
 import { config } from "../src/lib/config";
 import { slotsForDay } from "../src/lib/slots";
+import { bookings } from "../src/db/schema";
 import { formatHour } from "../src/lib/format";
 import { createTestContext } from "./helpers";
 import type { BookingInput } from "../src/lib/booking-rules";
@@ -393,5 +394,33 @@ describe("cancelación desde el correo", () => {
     expect((await getMeetingSummary(ctx, meeting.id))?.status).toBe("cancelled");
     await book();
     expect(await getMeetingSummary(ctx, "no-existe")).toBeNull();
+  });
+});
+
+describe("duración de 45 minutos", () => {
+  it("cada día tiene 12 bloques de 45 minutos que cubren la jornada completa", () => {
+    for (const day of config.schedule.days) {
+      const slots = slotsForDay(day.date, config);
+      expect(slots).toHaveLength(12);
+      expect(new Set(slots.map((s) => s.endsAt - s.startsAt))).toEqual(new Set([45 * 60_000]));
+      expect(formatHour(new Date(slots[0].startsAt), config.timezone)).toBe(day.start);
+      expect(formatHour(new Date(slots[11].endsAt), config.timezone)).toBe(day.end);
+    }
+  });
+
+  it("la reunión queda guardada con 45 minutos de duración", async () => {
+    await book();
+    const [row] = await ctx.db.select().from(bookings);
+    expect(row.endsAt.getTime() - row.startsAt.getTime()).toBe(45 * 60_000);
+  });
+
+  it("un horario de los bloques anteriores de 30 minutos ya no es válido", async () => {
+    expect(formatHour(new Date(SLOTS[1].startsAt), config.timezone)).toBe("10:45");
+    await expectError(book({ time: "10:30" }), "INVALID");
+  });
+
+  it("el correo muestra la hora de término a los 45 minutos", async () => {
+    await book();
+    expect(ctx.mail.sent[0].html).toContain("10:00 – 10:45 · 45 min");
   });
 });

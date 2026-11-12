@@ -49,7 +49,7 @@ export const staffUsers = pgTable(
 );
 
 /*
- * Una reunión por bloque de 30 min en la sala (índice sobre room + starts_at) y
+ * Una reunión por bloque en la sala (índice sobre room + starts_at) y
  * una sola reunión por empresa a la misma hora (índice sobre target_company + starts_at).
  * Cancelar cambia el estado: las reuniones canceladas no ocupan horario.
  */

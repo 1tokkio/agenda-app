@@ -22,6 +22,9 @@ export const SLOT_TIMES: string[] = (() => {
   return times;
 })();
 
+/** Duración de cada reunión (un bloque), en minutos. */
+export const SLOT_MINUTES = config.schedule.slotMinutes;
+
 export const MAX_USERS = config.maxUsers;
 export const COMPANIES = config.companies;
 

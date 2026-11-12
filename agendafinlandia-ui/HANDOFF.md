@@ -19,7 +19,7 @@ Archivos de este paquete:
 - **Tema:** claro/oscuro con la clase `.dark`. Todo color sale de las variables de `tokens.css`; no se usan hex sueltos en componentes.
 - **Radios:** 8px en celdas y tarjetas de reunión, 10px en botones e inputs, 16px en tarjetas y paneles.
 - **Íconos:** de trazo, a 1.6px de grosor (estilo Lucide). Sin emojis.
-- **Bloques:** 30 minutos, de 10:00 a 18:30 (18 por día). Evento: miércoles 18, jueves 19 y viernes 20 de noviembre de 2026.
+- **Bloques:** 45 minutos, de 10:00 a 19:00 (12 por día). Evento: miércoles 18, jueves 19 y viernes 20 de noviembre de 2026.
 
 ## 2. Layout
 

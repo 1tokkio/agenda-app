@@ -1,4 +1,4 @@
-import { TIME_ZONE } from "./data";
+import { SLOT_MINUTES, TIME_ZONE } from "./data";
 
 /** "miércoles 18 de noviembre". */
 export function formatDayLabel(date: string): string {
@@ -20,9 +20,9 @@ export function formatDayShort(date: string): string {
   }).format(new Date(`${date}T12:00:00`));
 }
 
-/** Hora de término: cada reunión dura un bloque de 30 minutos. */
+/** Hora de término: cada reunión dura un bloque (SLOT_MINUTES). */
 export function endTime(time: string): string {
   const [h, m] = time.split(":").map(Number);
-  const total = h * 60 + m + 30;
+  const total = h * 60 + m + SLOT_MINUTES;
   return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
 }

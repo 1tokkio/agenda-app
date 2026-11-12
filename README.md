@@ -1,6 +1,6 @@
 # AgendaFinlandia · EXPOCORMA 2026
 
-Agendamiento de reuniones para el stand de Finlandia. Los visitantes reservan un bloque de 30 minutos
+Agendamiento de reuniones para el stand de Finlandia. Los visitantes reservan un bloque de 45 minutos
 desde el tótem o desde su celular, y el personal de las empresas administra la agenda desde `/admin`.
 
 - **Agenda pública:** `/` (tótem y dispositivos de visitantes).

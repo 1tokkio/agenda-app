@@ -3,13 +3,13 @@
 import { useState, useSyncExternalStore } from "react";
 import { motion } from "motion/react";
 import { cn } from "@/lib/cn";
-import { DAYS, SLOT_TIMES, TIME_ZONE } from "./data";
+import { DAYS, SLOT_MINUTES, SLOT_TIMES, TIME_ZONE } from "./data";
 import { endTime } from "./logic";
 import { useAgenda, type SlotState } from "./store";
 
 type View = "days" | "week";
 
-/** Alto de un bloque de 30 min en escritorio (--slot-h de tokens.css). */
+/** Alto de un bloque en escritorio (--slot-h de tokens.css). */
 const ROW_H = 52;
 /** Columna de horas: "GMT-3" arriba y la hora de cada bloque. */
 const TIME_COL_W = 76;
@@ -262,7 +262,7 @@ function NowLine({ minutes }: { minutes: number }) {
   const start = toMinutes(SLOT_TIMES[0]);
   const end = toMinutes(endTime(SLOT_TIMES[SLOT_TIMES.length - 1]));
   if (minutes < start || minutes >= end) return null;
-  const top = ((minutes - start) / 30) * ROW_H;
+  const top = ((minutes - start) / SLOT_MINUTES) * ROW_H;
   return (
     <div aria-hidden="true" className="pointer-events-none absolute end-0 start-[-5px] flex items-center" style={{ top }}>
       <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: "var(--now)" }} />

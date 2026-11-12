@@ -4,7 +4,7 @@ import { config } from "@/lib/config";
 import { slotsForDay } from "@/lib/slots";
 import { useAgenda } from "./store";
 
-/** Bloques de 30 minutos de todo el evento. */
+/** Bloques de todo el evento. */
 const TOTAL_SLOTS = config.schedule.days.reduce((total, day) => total + slotsForDay(day.date, config).length, 0);
 
 /** Tarjeta al pie del menú: datos del evento para el usuario, ocupación de la sala para el admin. */

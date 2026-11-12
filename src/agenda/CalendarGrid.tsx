@@ -19,7 +19,7 @@ const FIT_HEADER_PX = 40;
 const BOTTOM_GAP_PX = 24;
 
 /**
- * Calendario central, estilo cuadrícula semanal: tres días en columnas y bloques de 30 min (10:00–19:00).
+ * Calendario central, estilo cuadrícula semanal: tres días en columnas y bloques de reunión (10:00–19:00).
  * En escritorio y tablet se ven los tres días; en celular, un día a la vez.
  * Con `fit`, el calendario ocupa el alto restante de la ventana sin scroll vertical.
  */

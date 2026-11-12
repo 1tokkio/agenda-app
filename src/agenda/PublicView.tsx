@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Sheet } from "@/components/ui/Sheet";
-import { SLOT_TIMES, type Meeting } from "./data";
+import { SLOT_MINUTES, SLOT_TIMES, type Meeting } from "./data";
 import { endTime, formatDayLabel } from "./logic";
 import { MeetingForm } from "./MeetingForm";
 import { UserSidePanel } from "./UserSidePanel";
@@ -29,7 +29,7 @@ export function PublicView() {
           <h1 className="text-[28px] leading-tight font-normal tracking-tight text-text md:text-[34px]" style={{ fontFamily: "var(--font-display)" }}>
             Agenda de reuniones
           </h1>
-          <p className="mt-1.5 text-sm text-muted md:text-[15px]">Reserva bloques de 30 minutos en la sala durante los 3 días del evento.</p>
+          <p className="mt-1.5 text-sm text-muted md:text-[15px]">Reserva bloques de {SLOT_MINUTES} minutos en la sala durante los 3 días del evento.</p>
         </section>
 
         <UserAgenda

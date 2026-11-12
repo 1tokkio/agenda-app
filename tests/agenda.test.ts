@@ -426,8 +426,8 @@ describe("duración de 45 minutos", () => {
 });
 
 describe("usuarios sin correo y empresas del evento", () => {
-  it("el evento tiene las 7 empresas", () => {
-    expect(config.companies.map((c) => c.name)).toEqual(["ABB", "PALONOT", "TKM", "TEKNOSAVO", "PONSSE", "EMBAJADA FINLANDIA", "VALMET"]);
+  it("el evento tiene las 7 empresas, con la embajada al final", () => {
+    expect(config.companies.map((c) => c.name)).toEqual(["ABB", "PALONOT", "TKM", "TEKNOSAVO", "PONSSE", "VALMET", "EMBAJADA FINLANDIA"]);
   });
 
   it("crea un usuario sin correo: queda sin correo y entra con su usuario y contraseña", async () => {

@@ -85,8 +85,8 @@ export const eventConfig: EventConfig = {
     { id: "empresa-c", name: "TKM", color: "#b45309" },
     { id: "empresa-d", name: "TEKNOSAVO", color: "#7c3aed" },
     { id: "empresa-e", name: "PONSSE", color: "#be185d" },
-    { id: "empresa-f", name: "EMBAJADA FINLANDIA", color: "#0e7490" },
     { id: "empresa-g", name: "VALMET", color: "#4d7c0f" },
+    { id: "empresa-f", name: "EMBAJADA FINLANDIA", color: "#0e7490" }, // siempre al final de la lista
   ],
 
   maxUsers: 30, // usuarios del personal de las empresas

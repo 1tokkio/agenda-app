@@ -43,7 +43,8 @@ export type StaffRole = "admin" | "member";
 export type StaffUserRecord = {
   id: string;
   name: string;
-  email: string;
+  /** Correo del usuario; null si se creó sin correo. */
+  email: string | null;
   username: string;
   role: StaffRole;
   companyId: string;
@@ -52,7 +53,7 @@ export type StaffUserRecord = {
   companyName: string | null;
 };
 
-/** Datos que cada usuario completa en su perfil. */
+/** Datos que cada usuario completa en su perfil. El correo es opcional: vacío lo deja sin correo. */
 export type ProfileInput = { name: string; email: string; jobTitle: string; phone: string; companyName: string };
 
 const USERNAME = /^[a-z0-9._-]{3,30}$/;
@@ -389,6 +390,14 @@ export async function listStaffUsers(ctx: BookingContext): Promise<StaffUserReco
   return ctx.db.select(staffColumns).from(staffUsers).orderBy(asc(staffUsers.name));
 }
 
+/**
+ * Dirección con la que existe la cuenta de acceso en Supabase Authentication: el correo del usuario o,
+ * si no tiene, una interna derivada del usuario (solo sirve para entrar; no recibe correo).
+ */
+export function accountEmail(cfg: EventConfig, user: { email: string | null; username: string }): string {
+  return user.email ?? `${user.username}@${cfg.accountEmailDomain}`;
+}
+
 /** Metadatos del perfil que se guardan también en la cuenta de acceso. */
 function accountMetadata(user: {
   username: string;
@@ -431,10 +440,10 @@ export async function createStaffUser(
   const { db, cfg, accounts } = ctx;
   const fields: FieldErrors = {};
   const name = input.name.trim();
-  const email = input.email.trim().toLowerCase();
+  const email = input.email.trim().toLowerCase() || null;
   const username = input.username.trim().toLowerCase();
   if (name.length < 2) fields.requesterName = "Escribe el nombre";
-  if (!isValidEmail(email)) fields.requesterEmail = "Correo no válido";
+  if (email && !isValidEmail(email)) fields.requesterEmail = "Correo no válido";
   if (!USERNAME.test(username)) fields.username = "Usa de 3 a 30 letras minúsculas, números, punto, guion o guion bajo";
   if (input.password.length < MIN_PASSWORD_LENGTH) fields.password = `La contraseña debe tener al menos ${MIN_PASSWORD_LENGTH} caracteres`;
   if (!cfg.companies.some((c) => c.id === input.companyId)) fields.targetCompanyId = "Elige una empresa";
@@ -449,7 +458,7 @@ export async function createStaffUser(
   const [taken] = await db
     .select({ id: staffUsers.id })
     .from(staffUsers)
-    .where(or(eq(staffUsers.email, email), eq(staffUsers.username, username)))
+    .where(email ? or(eq(staffUsers.email, email), eq(staffUsers.username, username)) : eq(staffUsers.username, username))
     .limit(1);
   if (taken) {
     const message = "Ya existe un usuario con ese correo o nombre de usuario";
@@ -459,7 +468,7 @@ export async function createStaffUser(
   const profile = { name, email, username, role, companyId: input.companyId, companyName: null, jobTitle: null, phone: null };
   let id: string;
   try {
-    id = await accounts.create({ email, password: input.password, metadata: accountMetadata(profile) });
+    id = await accounts.create({ email: accountEmail(cfg, profile), password: input.password, metadata: accountMetadata(profile) });
   } catch (err) {
     throw fromAccountError(err, "requesterEmail");
   }
@@ -487,27 +496,27 @@ export async function getProfile(ctx: BookingContext, id: string): Promise<Staff
 /** Actualiza el perfil propio: primero la cuenta de acceso y luego la fila; si la fila falla, la cuenta vuelve a su estado. */
 export async function updateProfile(ctx: BookingContext, id: string, input: ProfileInput): Promise<StaffUserRecord> {
   const name = input.name.trim();
-  const email = input.email.trim().toLowerCase();
+  const email = input.email.trim().toLowerCase() || null;
   const jobTitle = input.jobTitle.trim();
   const phone = input.phone.trim();
   const companyName = input.companyName.trim();
   const fields: FieldErrors = {};
   if (name.length < 2) fields.requesterName = "Escribe tu nombre";
-  if (!isValidEmail(email)) fields.requesterEmail = "Correo no válido";
+  if (email && !isValidEmail(email)) fields.requesterEmail = "Correo no válido";
   if (jobTitle.length > 80) fields.jobTitle = "Máximo 80 caracteres";
   if (phone && !PHONE.test(phone)) fields.phone = "Teléfono no válido, por ejemplo +56 9 1234 5678";
   if (companyName.length > 120) fields.companyName = "Máximo 120 caracteres";
   if (Object.keys(fields).length > 0) throw new BookingError("INVALID", "Revisa los datos del perfil", fields);
 
   const current = await getProfile(ctx, id);
-  if (email !== current.email) {
+  if (email && email !== current.email) {
     const [taken] = await ctx.db.select({ id: staffUsers.id }).from(staffUsers).where(eq(staffUsers.email, email)).limit(1);
     if (taken) throw new BookingError("CONFLICT", "Ese correo ya está en uso", { requesterEmail: "Ese correo ya está en uso" });
   }
 
   const updated = { ...current, name, email, jobTitle: jobTitle || null, phone: phone || null, companyName: companyName || null };
   try {
-    await ctx.accounts.update(id, { email, metadata: accountMetadata(updated) });
+    await ctx.accounts.update(id, { email: accountEmail(ctx.cfg, updated), metadata: accountMetadata(updated) });
   } catch (err) {
     throw fromAccountError(err, "requesterEmail");
   }
@@ -521,7 +530,7 @@ export async function updateProfile(ctx: BookingContext, id: string, input: Prof
     if (!row) throw new BookingError("NOT_FOUND", "El usuario no existe");
     return row;
   } catch (err) {
-    await ctx.accounts.update(id, { email: current.email, metadata: accountMetadata(current) }).catch(() => undefined);
+    await ctx.accounts.update(id, { email: accountEmail(ctx.cfg, current), metadata: accountMetadata(current) }).catch(() => undefined);
     if (err instanceof BookingError) throw err;
     if (isUniqueViolation(err)) throw new BookingError("CONFLICT", "Ese correo ya está en uso", { requesterEmail: "Ese correo ya está en uso" });
     throw err;
@@ -536,7 +545,7 @@ export async function authenticateStaff(ctx: BookingContext, username: string, p
     .where(eq(staffUsers.username, username.trim().toLowerCase()))
     .limit(1);
   if (!row) return null;
-  return (await ctx.accounts.signIn(row.email, password)) ? row : null;
+  return (await ctx.accounts.signIn(accountEmail(ctx.cfg, row), password)) ? row : null;
 }
 
 /** Quita un usuario. Quien administra no puede quitarse a sí mismo ni dejar el panel sin administradores. */

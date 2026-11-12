@@ -13,7 +13,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
   const admin = await currentUser();
   if (!admin) redirect("/login");
   if (admin.role !== "admin") redirect("/");
-  const user = { name: admin.name, email: admin.email };
+  const user = { name: admin.name, email: admin.email ?? "" };
   return (
     <div className="untitled finland">
       <AgendaProvider mode="admin">

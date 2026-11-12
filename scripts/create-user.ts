@@ -1,7 +1,8 @@
 /*
  * Crea un usuario del panel (inicia sesión con usuario y contraseña).
- * Uso: npm run db:user -- <usuario> <contraseña> "<nombre>" <correo> <empresa-id> [admin|member]
+ * Uso: npm run db:user -- <usuario> <contraseña> "<nombre>" <correo|-> <empresa-id> [admin|member]
  * Ejemplo: npm run db:user -- ana.perez "una-clave-segura" "Ana Pérez" ana@empresa.cl empresa-a
+ * Con "-" como correo el usuario se crea sin correo (entra igual con su usuario y contraseña).
  * Sin el último argumento crea un administrador: sirve para el primer acceso, que luego crea a los demás.
  * Usa la base de DATABASE_URL (o la local si no existe).
  */
@@ -10,11 +11,12 @@ import { BookingError, createStaffUser, type BookingContext } from "../src/lib/b
 import { supabaseAccounts } from "../src/lib/account-provider";
 import { config } from "../src/lib/config";
 
-const [username, password, name, email, companyId, roleArg = "admin"] = process.argv.slice(2);
+const [username, password, name, emailArg, companyId, roleArg = "admin"] = process.argv.slice(2);
+const email = emailArg === "-" ? "" : emailArg;
 
 async function main() {
-  if (!username || !password || !name || !email || !companyId || (roleArg !== "admin" && roleArg !== "member")) {
-    console.error('Uso: npm run db:user -- <usuario> <contraseña> "<nombre>" <correo> <empresa-id> [admin|member]');
+  if (!username || !password || !name || email === undefined || !companyId || (roleArg !== "admin" && roleArg !== "member")) {
+    console.error('Uso: npm run db:user -- <usuario> <contraseña> "<nombre>" <correo|-> <empresa-id> [admin|member]');
     process.exit(1);
   }
 

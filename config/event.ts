@@ -55,6 +55,7 @@ export type EventConfig = {
   rooms: Room[];
   companies: Company[];
   maxUsers: number; // máximo de usuarios del personal
+  accountEmailDomain: string; // dominio de la dirección interna de las cuentas creadas sin correo
   idleResetSeconds: number; // reinicio del tótem por inactividad
   theme: Theme;
 };
@@ -79,15 +80,18 @@ export const eventConfig: EventConfig = {
   rooms: [{ id: "sala-unica", name: "Sala única", capacity: 1 }],
 
   companies: [
-    { id: "empresa-a", name: "Empresa A", color: "#1d4ed8" },
-    { id: "empresa-b", name: "Empresa B", color: "#047857" },
-    { id: "empresa-c", name: "Empresa C", color: "#b45309" },
-    { id: "empresa-d", name: "Empresa D", color: "#7c3aed" },
-    { id: "empresa-e", name: "Empresa E", color: "#be185d" },
-    { id: "empresa-f", name: "Empresa F", color: "#0e7490" },
+    { id: "empresa-a", name: "ABB", color: "#1d4ed8" },
+    { id: "empresa-b", name: "PALONOT", color: "#047857" },
+    { id: "empresa-c", name: "TKM", color: "#b45309" },
+    { id: "empresa-d", name: "TEKNOSAVO", color: "#7c3aed" },
+    { id: "empresa-e", name: "PONSSE", color: "#be185d" },
+    { id: "empresa-f", name: "EMBAJADA FINLANDIA", color: "#0e7490" },
+    { id: "empresa-g", name: "VALMET", color: "#4d7c0f" },
   ],
 
   maxUsers: 30, // usuarios del personal de las empresas
+
+  accountEmailDomain: "usuarios.agendafinlandia.cl", // usuario@este-dominio, solo para entrar; no recibe correo
   idleResetSeconds: 30,
 
   theme: {

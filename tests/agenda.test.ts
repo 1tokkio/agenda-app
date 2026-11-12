@@ -424,3 +424,42 @@ describe("duración de 45 minutos", () => {
     expect(ctx.mail.sent[0].html).toContain("10:00 – 10:45 · 45 min");
   });
 });
+
+describe("usuarios sin correo y empresas del evento", () => {
+  it("el evento tiene las 7 empresas", () => {
+    expect(config.companies.map((c) => c.name)).toEqual(["ABB", "PALONOT", "TKM", "TEKNOSAVO", "PONSSE", "EMBAJADA FINLANDIA", "VALMET"]);
+  });
+
+  it("crea un usuario sin correo: queda sin correo y entra con su usuario y contraseña", async () => {
+    const user = await createStaffUser(ctx, staff({ email: "", username: "sin.correo" }));
+    expect(user.email).toBeNull();
+    expect(user.companyId).toBe("empresa-a");
+    expect([...ctx.accounts.store.values()].map((a) => a.email)).toEqual([`sin.correo@${config.accountEmailDomain}`]);
+    expect((await authenticateStaff(ctx, "Sin.Correo", "clave-segura-2026"))?.id).toBe(user.id);
+    expect(await authenticateStaff(ctx, "sin.correo", "otra-clave")).toBeNull();
+  });
+
+  it("varios usuarios pueden estar sin correo, pero el usuario no se repite", async () => {
+    await createStaffUser(ctx, staff({ email: "", username: "uno.sin" }));
+    await createStaffUser(ctx, staff({ email: "   ", username: "dos.sin" }));
+    expect(await listStaffUsers(ctx)).toHaveLength(2);
+    await expectError(createStaffUser(ctx, staff({ email: "", username: "uno.sin" })), "CONFLICT");
+  });
+
+  it("si se escribe un correo, sigue validándose y no se repite", async () => {
+    const bad = await expectError(createStaffUser(ctx, staff({ email: "no-es-correo", username: "mal.correo" })), "INVALID");
+    expect(bad.fields?.requesterEmail).toBeTruthy();
+    await createStaffUser(ctx, staff({ email: "dup@empresa.cl", username: "primero" }));
+    await expectError(createStaffUser(ctx, staff({ email: "dup@empresa.cl", username: "segundo" })), "CONFLICT");
+  });
+
+  it("el perfil permite quitar y volver a poner el correo", async () => {
+    const user = await createStaffUser(ctx, staff({ email: "ana@empresa.cl", username: "ana.perfil" }));
+    const profile = { name: "Ana", email: "", jobTitle: "", phone: "", companyName: "" };
+    expect((await updateProfile(ctx, user.id, profile)).email).toBeNull();
+    expect([...ctx.accounts.store.values()][0].email).toBe(`ana.perfil@${config.accountEmailDomain}`);
+    expect((await authenticateStaff(ctx, "ana.perfil", "clave-segura-2026"))?.id).toBe(user.id);
+    expect((await updateProfile(ctx, user.id, { ...profile, email: "nuevo@empresa.cl" })).email).toBe("nuevo@empresa.cl");
+    expect([...ctx.accounts.store.values()][0].email).toBe("nuevo@empresa.cl");
+  });
+});

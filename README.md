@@ -54,7 +54,7 @@ La agenda es privada: solo entra quien tiene un usuario creado en la base (tabla
 - **Administrador:** entra al panel `/admin`, crea usuarios y puede quitarlos.
 - **Usuario de la agenda:** entra a `/` y reserva reuniones. No ve el panel.
 
-Cada usuario tiene su cuenta en **Supabase Authentication** (correo y contraseña), y su perfil (empresa, cargo, teléfono) va en la misma cuenta y en la tabla `staff_users`. La contraseña nunca se guarda en la tabla de la app. El límite es de 30 usuarios. Un administrador no puede quitarse a sí mismo ni dejar el panel sin administradores.
+Cada usuario tiene su cuenta en **Supabase Authentication** (usuario y contraseña; el correo es opcional: sin correo, la cuenta usa una dirección interna `usuario@usuarios.agendafinlandia.cl`, definida en `accountEmailDomain` de `config/event.ts`, que no recibe correo), y su perfil (empresa, cargo, teléfono) va en la misma cuenta y en la tabla `staff_users`. La contraseña nunca se guarda en la tabla de la app. El límite es de 30 usuarios. Un administrador no puede quitarse a sí mismo ni dejar el panel sin administradores.
 
 - **Primer administrador:** desde la carpeta del proyecto, con la misma `DATABASE_URL` de Supabase. Sin el último argumento se crea un administrador:
 
@@ -62,7 +62,7 @@ Cada usuario tiene su cuenta en **Supabase Authentication** (correo y contraseñ
   npm run db:user -- ana.perez "una-clave-segura" "Ana Pérez" ana@empresa.cl empresa-a
   ```
 
-  Los argumentos son: usuario, contraseña, nombre, correo, id de la empresa (`empresa-a` … `empresa-f`) y, opcional, `member` para un usuario de la agenda.
+  Los argumentos son: usuario, contraseña, nombre, correo (`-` para crearlo sin correo), id de la empresa (`empresa-a` … `empresa-g`) y, opcional, `member` para un usuario de la agenda.
 - **Más usuarios:** los administradores los crean en **Usuarios** del panel, eligiendo el tipo de acceso.
 - **Tótem:** la agenda pide sesión, así que el tótem también debe iniciar sesión con un usuario de la agenda.
 - `npm run db:demo` crea usuarios de prueba con la contraseña `demo-expo-2026`. No lo ejecutes contra la base de producción.
@@ -115,5 +115,5 @@ tests/                   pruebas de reglas (Vitest, sobre PGlite en memoria)
 ## Pendiente antes del evento
 
 - Dominio y verificación de Resend para el remitente administrativo.
-- Empresas, nombres y correos reales (hoy son de ejemplo).
+- Correos reales de los usuarios (las 7 empresas ya son las del evento).
 - PIN de producción y datos del perfil del panel.

@@ -43,6 +43,13 @@
       "when": 1793262652096,
       "tag": "0005_booking_creator",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794489597057,
+      "tag": "0006_staff_email_optional",
+      "breakpoints": true
     }
   ]
 }

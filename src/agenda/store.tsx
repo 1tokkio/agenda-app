@@ -13,7 +13,8 @@ export type SlotState =
 export type AgendaMode = "public" | "admin";
 
 type MeetingInput = Omit<Meeting, "id">;
-type UserInput = Omit<StaffUser, "id"> & { password: string };
+/** Datos para crear un usuario; el correo puede ir vacío. */
+type UserInput = Omit<StaffUser, "id" | "email"> & { email: string; password: string };
 
 type AgendaStore = {
   mode: AgendaMode;

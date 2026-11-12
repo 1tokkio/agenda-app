@@ -6,7 +6,7 @@ import { config } from "@/lib/config";
 
 type Profile = {
   name: string;
-  email: string;
+  email: string | null;
   username: string;
   companyId: string;
   jobTitle: string | null;
@@ -41,7 +41,7 @@ export function ProfileDialog({ onClose }: { onClose: () => void }) {
           setProfile(body.profile);
           setValues({
             name: body.profile.name,
-            email: body.profile.email,
+            email: body.profile.email ?? "",
             jobTitle: body.profile.jobTitle ?? "",
             phone: body.profile.phone ?? "",
             companyName: body.profile.companyName ?? "",
@@ -145,8 +145,8 @@ export function ProfileDialog({ onClose }: { onClose: () => void }) {
             <Field label="Nombre" error={errors.name}>
               <input className={inputClass} value={values.name} onChange={update("name")} required />
             </Field>
-            <Field label="Correo" error={errors.email}>
-              <input type="email" className={inputClass} value={values.email} onChange={update("email")} required />
+            <Field label="Correo (opcional)" error={errors.email}>
+              <input type="email" className={inputClass} value={values.email} onChange={update("email")} />
             </Field>
             <Field label="Cargo" error={errors.jobTitle}>
               <input className={inputClass} value={values.jobTitle} onChange={update("jobTitle")} placeholder="Ej.: Gerente comercial" />

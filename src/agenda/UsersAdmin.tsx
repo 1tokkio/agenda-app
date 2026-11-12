@@ -51,7 +51,7 @@ export function UsersAdmin() {
             {errors.requesterName && <span role="alert" className="text-sm text-error-600">{errors.requesterName}</span>}
           </label>
           <label className="flex flex-col gap-2">
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Correo</span>
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Correo (opcional)</span>
             <input type="email" disabled={full} className={inputClass} value={email} onChange={(e) => setEmail(e.target.value)} />
             {errors.requesterEmail && <span role="alert" className="text-sm text-error-600">{errors.requesterEmail}</span>}
           </label>
@@ -109,7 +109,7 @@ export function UsersAdmin() {
               <li key={u.id} className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
                 <div className="min-w-0">
                   <p className="truncate font-medium text-gray-800 dark:text-white/90">{u.name}</p>
-                  <p className="truncate text-sm text-gray-500 dark:text-gray-400">{u.email}</p>
+                  {u.email && <p className="truncate text-sm text-gray-500 dark:text-gray-400">{u.email}</p>}
                   <p className="truncate text-sm text-gray-500 dark:text-gray-400">
                     Usuario: {u.username} · {u.role === "admin" ? "Administrador" : "Usuario de la agenda"}
                   </p>

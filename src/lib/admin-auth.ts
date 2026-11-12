@@ -11,7 +11,8 @@ const SESSION_SECONDS = 60 * 60 * 12;
 export type SessionUser = {
   id: string;
   name: string;
-  email: string;
+  /** null si el usuario se creó sin correo. */
+  email: string | null;
   username: string;
   role: "admin" | "member";
   companyId: string;

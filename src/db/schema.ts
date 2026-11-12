@@ -32,7 +32,8 @@ export const staffUsers = pgTable(
   {
     id: text("id").primaryKey(),
     name: text("name").notNull(),
-    email: text("email").notNull().unique(),
+    // Opcional: sin correo, la cuenta de acceso usa una dirección interna derivada del usuario.
+    email: text("email").unique(),
     username: text("username").notNull().unique(),
     role: text("role", { enum: ["admin", "member"] })
       .notNull()

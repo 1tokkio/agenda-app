@@ -1,0 +1,1 @@
+ALTER TABLE "staff_users" ALTER COLUMN "email" DROP NOT NULL;

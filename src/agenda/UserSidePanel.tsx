@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "motion/react";
-import { DAYS, SLOT_TIMES, type Meeting } from "./data";
+import { DAYS, ROOM_NAME, SLOT_TIMES, type Meeting } from "./data";
 import { endTime, formatDayLabel, formatDayShort } from "./logic";
 import { useAgenda } from "./store";
 
@@ -40,7 +40,7 @@ export function UserSidePanel({ now }: { now: { date: string; minutes: number } 
             </div>
             <div className="flex items-center gap-2 rounded-[10px] bg-brand-soft px-3 py-2.5 text-[13px] font-medium text-brand-text">
               <PinIcon />
-              Sala de reuniones · Expocorma 2026
+              {ROOM_NAME} · Expocorma 2026
             </div>
           </>
         ) : (

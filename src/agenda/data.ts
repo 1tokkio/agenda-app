@@ -22,6 +22,9 @@ export const SLOT_TIMES: string[] = (() => {
   return times;
 })();
 
+/** Lugar de las reuniones (el mismo nombre que lleva el correo de confirmación). */
+export const ROOM_NAME = config.rooms[0].name;
+
 /** Duración de cada reunión (un bloque), en minutos. */
 export const SLOT_MINUTES = config.schedule.slotMinutes;
 

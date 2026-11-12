@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Sheet } from "@/components/ui/Sheet";
-import { SLOT_MINUTES, SLOT_TIMES, type Meeting } from "./data";
+import { ROOM_NAME, SLOT_MINUTES, SLOT_TIMES, type Meeting } from "./data";
 import { endTime, formatDayLabel } from "./logic";
 import { MeetingForm } from "./MeetingForm";
 import { UserSidePanel } from "./UserSidePanel";
@@ -73,7 +73,7 @@ function Confirmation({ meeting, onClose }: { meeting: Meeting; onClose: () => v
   return (
     <div className="flex flex-col gap-5">
       <p className="text-sm text-text-2">
-        {formatDayLabel(meeting.date)} · {meeting.time} – {endTime(meeting.time)} · Sala única del evento
+        {formatDayLabel(meeting.date)} · {meeting.time} – {endTime(meeting.time)} · {ROOM_NAME}
       </p>
       <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
         <dt className="text-muted">Confirmación a</dt>

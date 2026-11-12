@@ -419,6 +419,13 @@ describe("duración de 45 minutos", () => {
     await expectError(book({ time: "10:30" }), "INVALID");
   });
 
+  it("el correo indica el lugar: FINLANDIA STAND 2-C06", async () => {
+    await book();
+    expect(ctx.mail.sent[0].html).toContain("FINLANDIA STAND 2-C06");
+    expect(ctx.mail.sent[0].text).toContain("Lugar: FINLANDIA STAND 2-C06");
+    expect(ctx.mail.sent[0].html).not.toContain("Sala única");
+  });
+
   it("el correo muestra la hora de término a los 45 minutos", async () => {
     await book();
     expect(ctx.mail.sent[0].html).toContain("10:00 – 10:45 · 45 min");

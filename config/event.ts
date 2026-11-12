@@ -77,7 +77,7 @@ export const eventConfig: EventConfig = {
   },
 
   // Un solo lugar de reuniones.
-  rooms: [{ id: "sala-unica", name: "Sala única", capacity: 1 }],
+  rooms: [{ id: "sala-unica", name: "FINLANDIA STAND 2-C06", capacity: 1 }],
 
   companies: [
     { id: "empresa-a", name: "ABB", color: "#1d4ed8" },

@@ -70,7 +70,7 @@ En admin, la reunión es un botón `.co-X` con "Empresa X" (12px/600) y "con Emp
 **Pestañas de día (admin):** botones de dos líneas ("Mié 18 nov" / "6 reuniones · 10 libres"). La pestaña activa va en `--brand`. Controlan los KPIs, el resaltado del día en la grilla y la lista "Reuniones del día".
 
 **Modal / panel inferior:** ancho máximo de 480px y radio de 16px; en móvil sube desde abajo con radio de 20px arriba.
-- Usuario: muestra día y hora confirmados en `--brand-soft`, más los campos "Empresa con la que te reúnes" y "Asunto (opcional)".
+- Usuario: muestra día y hora confirmados en `--brand-soft`, más los campos "Empresa con la que agendas" y "Asunto (opcional)".
 - Admin, bloque libre: selector "Agendar reunión | Bloquear horario".
 - Admin, reunión: "Cancelar reunión".
 - Admin, bloqueado: "Desbloquear".

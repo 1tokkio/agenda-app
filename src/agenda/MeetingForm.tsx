@@ -76,7 +76,7 @@ export function MeetingForm({ date, time, initial, submitLabel, onSubmit, onDone
         <input className={inputClass} value={values.title} onChange={(e) => set("title", e.target.value)} maxLength={120} placeholder="Ej.: Presentación de catálogo" />
       </Field>
 
-      <Field label="Empresa con la que te reúnes" error={errors.targetCompanyId}>
+      <Field label="Empresa con la que agendas" error={errors.targetCompanyId}>
         <select className={inputClass} value={values.targetCompanyId} onChange={(e) => set("targetCompanyId", e.target.value)}>
           <option value="">Elige una empresa</option>
           {COMPANIES.map((c) => (
@@ -85,11 +85,11 @@ export function MeetingForm({ date, time, initial, submitLabel, onSubmit, onDone
         </select>
       </Field>
 
-      <Field label="Tu correo (recibirás la confirmación)" error={errors.requesterEmail}>
+      <Field label="Correo de la persona que te invita" error={errors.requesterEmail} hint="Recibirá la confirmación.">
         <input type="email" inputMode="email" className={inputClass} value={values.requesterEmail} onChange={(e) => set("requesterEmail", e.target.value)} autoComplete="email" />
       </Field>
 
-      <Field label="Correo de la otra persona (opcional)" error={errors.guestEmail} hint="Si lo escribes, también le llegará la confirmación." wide>
+      <Field label="Correo del invitado (opcional)" error={errors.guestEmail} hint="Si lo escribes, también le llegará la confirmación." wide>
         <input type="email" inputMode="email" className={inputClass} value={values.guestEmail} onChange={(e) => set("guestEmail", e.target.value)} />
       </Field>
 

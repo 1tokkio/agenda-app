@@ -409,13 +409,13 @@ describe("cancelación desde el correo", () => {
 });
 
 describe("duración de 45 minutos", () => {
-  it("cada día tiene 11 bloques de 45 minutos que cubren la jornada de 09:45 a 18:00", () => {
+  it("cada día tiene 12 bloques de 45 minutos que cubren la jornada de 09:45 a 18:45", () => {
     for (const day of config.schedule.days) {
       const slots = slotsForDay(day.date, config);
-      expect(slots).toHaveLength(11);
+      expect(slots).toHaveLength(12);
       expect(new Set(slots.map((s) => s.endsAt - s.startsAt))).toEqual(new Set([45 * 60_000]));
       expect(formatHour(new Date(slots[0].startsAt), config.timezone)).toBe("09:45");
-      expect(formatHour(new Date(slots[10].endsAt), config.timezone)).toBe("18:00");
+      expect(formatHour(new Date(slots[11].endsAt), config.timezone)).toBe("18:45");
     }
   });
 
@@ -427,11 +427,11 @@ describe("duración de 45 minutos", () => {
 
   it("los horarios de la jornada anterior (desde las 10:00) ya no son válidos", async () => {
     expect(SLOTS.map((s) => formatHour(new Date(s.startsAt), config.timezone))).toEqual([
-      "09:45", "10:30", "11:15", "12:00", "12:45", "13:30", "14:15", "15:00", "15:45", "16:30", "17:15",
+      "09:45", "10:30", "11:15", "12:00", "12:45", "13:30", "14:15", "15:00", "15:45", "16:30", "17:15", "18:00",
     ]);
     await expectError(book({ time: "10:00" }), "INVALID");
     await expectError(book({ time: "10:45" }), "INVALID");
-    await expectError(book({ time: "18:00" }), "INVALID");
+    await expectError(book({ time: "18:45" }), "INVALID");
   });
 
   it("el correo indica el lugar: FINLANDIA STAND 2-C06", async () => {

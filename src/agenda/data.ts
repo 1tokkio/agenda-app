@@ -44,7 +44,7 @@ export type Meeting = {
   targetCompanyId: string;
   requesterEmail: string;
   guestEmail?: string;
-  /** Lo creó quien consulta. En la vista pública, solo estas reuniones traen título. */
+  /** Lo creó quien consulta (la agenda la resalta). */
   mine?: boolean;
 };
 

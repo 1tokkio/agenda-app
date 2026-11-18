@@ -312,32 +312,41 @@ describe("agenda pública", () => {
     expect(pub.guestEmail).toBeUndefined();
   });
 
-  it("el título solo lo ve quien creó la reunión", async () => {
+  it("todos los usuarios ven el título de las reuniones; `mine` marca solo las propias", async () => {
     await book();
+    const colleague = (await createStaffUser(ctx, { name: "Luis Soto", email: "luis@empresa.cl", username: "luis", password: "clave-segura-2026", companyId: "empresa-b" })).id;
+    const own = (await listAgenda(ctx, { full: false, viewerId: creator })).meetings[0];
+    const other = (await listAgenda(ctx, { full: false, viewerId: colleague })).meetings[0];
+    expect(own.mine).toBe(true);
+    expect(other.mine).toBe(false);
+    expect(own.title).toBe("Presentación de catálogo");
+    expect(other.title).toBe("Presentación de catálogo");
+  });
+
+  it("el título también llega a una consulta sin usuario identificado, pero sin datos personales", async () => {
+    await book({ guestEmail: "gerencia@ejemplo.cl" });
+    const [meeting] = (await listAgenda(ctx, { full: false })).meetings;
+    expect(meeting.mine).toBe(false);
+    expect(meeting.title).toBe("Presentación de catálogo");
+    expect(meeting.requesterName).toBe("");
+    expect(meeting.requesterEmail).toBe("");
+    expect(meeting.guestEmail).toBeUndefined();
+  });
+
+  it("las reuniones importadas, sin creador, también muestran su título", async () => {
+    await book();
+    await ctx.db.update(bookings).set({ createdBy: null });
     const [meeting] = (await listAgenda(ctx, { full: false, viewerId: creator })).meetings;
-    expect(meeting.mine).toBe(true);
+    expect(meeting.mine).toBe(false);
     expect(meeting.title).toBe("Presentación de catálogo");
   });
 
-  it("otra persona de la misma empresa tampoco ve el título", async () => {
-    await book();
-    const colleague = (await createStaffUser(ctx, { name: "Luis Soto", email: "luis@empresa.cl", username: "luis", password: "clave-segura-2026", companyId: "empresa-a" })).id;
-    const [meeting] = (await listAgenda(ctx, { full: false, viewerId: colleague })).meetings;
-    expect(meeting.mine).toBe(false);
-    expect(meeting.title).toBe("");
-  });
-
-  it("sin sesión no llega ningún título", async () => {
-    await book();
-    const [meeting] = (await listAgenda(ctx, { full: false })).meetings;
-    expect(meeting.mine).toBe(false);
-    expect(meeting.title).toBe("");
-  });
-
-  it("el admin ve todos los títulos", async () => {
+  it("el admin ve el título y los datos personales", async () => {
     await book();
     const [meeting] = (await listAgenda(ctx, { full: true })).meetings;
     expect(meeting.title).toBe("Presentación de catálogo");
+    expect(meeting.requesterName).toBe("Camila Rojas");
+    expect(meeting.requesterEmail).toBe("camila@ejemplo.cl");
   });
 
   it("la agenda incluye los bloqueos", async () => {

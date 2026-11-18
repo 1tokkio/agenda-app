@@ -60,7 +60,7 @@ const USERNAME = /^[a-z0-9._-]{3,30}$/;
 const MIN_PASSWORD_LENGTH = 8;
 const PHONE = /^\+?[0-9 ()-]{6,20}$/;
 
-/** Reunión tal como se lista: `mine` indica si la creó quien consulta. */
+/** Reunión tal como se lista: `mine` indica si la creó quien consulta (la agenda la resalta). */
 export type AgendaMeeting = MeetingRecord & { mine: boolean };
 
 /** Horario retenido por alguien que está llenando el formulario; `mine` es true si lo retiene quien consulta. */
@@ -108,8 +108,8 @@ function isUniqueViolation(err: unknown): boolean {
 }
 
 /**
- * Reuniones confirmadas y bloqueos de todo el evento. `full` incluye datos personales y títulos (solo para el admin).
- * Sin `full`, el título solo se muestra a quien creó la reunión (`viewerId`); a los demás llega vacío.
+ * Reuniones confirmadas y bloqueos de todo el evento. Los títulos los ven todos los usuarios con sesión.
+ * `full` suma los datos personales de quien agendó (nombre y correos), solo para el admin; `viewerId` marca cuáles creó quien consulta.
  */
 export async function listAgenda(
   ctx: BookingContext,
@@ -148,7 +148,7 @@ export async function listAgenda(
         id: r.id,
         date,
         time,
-        title: options.full || mine ? r.title : "",
+        title: r.title,
         requesterCompany: r.requesterCompany,
         targetCompanyId: r.targetCompanyId,
         mine,

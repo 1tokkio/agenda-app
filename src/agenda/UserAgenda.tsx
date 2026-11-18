@@ -270,7 +270,7 @@ function SlotCell({
     );
   }
 
-  // Solo quien creó la reunión ve su título; los demás ven "Reservado".
+  // Todos ven el título; las reuniones que creó quien consulta se resaltan.
   if (state.meeting.mine) {
     return (
       <div
@@ -288,9 +288,9 @@ function SlotCell({
     <div
       className="flex h-full min-w-0 flex-col justify-center rounded-lg border px-2.5 py-1"
       style={{ background: "var(--taken-bg)", borderColor: "var(--taken-bd)" }}
-      aria-label={`Reservado, ${range}`}
+      aria-label={`${state.meeting.title}, ${range}`}
     >
-      <span className="truncate text-xs font-medium text-text-2">Reservado</span>
+      <span className="truncate text-xs font-medium text-text-2">{state.meeting.title}</span>
       <span className="truncate text-[11px] text-muted tabular-nums">{range}</span>
     </div>
   );

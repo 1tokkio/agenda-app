@@ -9,14 +9,14 @@ export const dynamic = "force-dynamic";
 
 // Sin sesión se ve la página de inicio, con el botón para ingresar. Con sesión, la agenda de la reunión: solo usuarios
 // creados por el administrador. Los datos llegan desde /api/agenda.
-export default async function Home() {
+export default async function Home({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
   const user = await currentUser();
   if (!user) return <Landing />;
   return (
     <div className="untitled finland min-h-screen">
       <AgendaProvider mode="public">
         <PublicShell user={{ name: user.name, email: user.email ?? "" }} isAdmin={user.role === "admin"}>
-          <PublicView />
+          <PublicView startFullscreen={(await searchParams).pantalla === "completa"} />
         </PublicShell>
       </AgendaProvider>
     </div>

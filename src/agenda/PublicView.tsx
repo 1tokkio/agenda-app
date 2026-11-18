@@ -7,16 +7,40 @@ import { endTime, formatDayLabel } from "./logic";
 import { MeetingForm } from "./MeetingForm";
 import { UserSidePanel } from "./UserSidePanel";
 import { UserAgenda, useClock } from "./UserAgenda";
-import { useAgenda } from "./store";
+import { useAgenda, type SlotState } from "./store";
 
-/** Agenda del usuario con sesión: los visitantes no ven el calendario sin iniciar sesión. */
-export function PublicView() {
+/**
+ * Agenda del usuario con sesión: los visitantes no ven el calendario sin iniciar sesión.
+ * En pantalla completa el calendario ocupa toda la ventana, sin menú ni bordes (`startFullscreen` la abre así de entrada).
+ */
+export function PublicView({ startFullscreen = false }: { startFullscreen?: boolean }) {
   const { bookMeeting, slotState, holdSlot, releaseSlot } = useAgenda();
   const now = useClock();
   const [selected, setSelected] = useState<{ date: string; time: string; until: number } | null>(null);
   const [confirmed, setConfirmed] = useState<Meeting | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [opening, setOpening] = useState(false);
+  const [full, setFull] = useState(startFullscreen);
+
+  // Esc (o salir desde el navegador) también cierra el modo de pantalla completa.
+  useEffect(() => {
+    const onChange = () => {
+      if (!document.fullscreenElement) setFull(false);
+    };
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
+
+  const toggleFullscreen = useCallback(() => {
+    if (full) {
+      setFull(false);
+      if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
+      return;
+    }
+    setFull(true);
+    // Donde el navegador no permite la pantalla completa (p. ej. iPhone), igual se ve el calendario sin menú.
+    if (document.documentElement.requestFullscreen) void document.documentElement.requestFullscreen().catch(() => undefined);
+  }, [full]);
 
   useEffect(() => {
     if (!notice) return;
@@ -59,37 +83,17 @@ export function PublicView() {
     if (time) void openSlot(date, time);
   };
 
-  return (
-    <div className="flex flex-col gap-6 min-[1440px]:flex-row min-[1440px]:items-start min-[1440px]:gap-10">
-      <div className="flex min-w-0 flex-1 flex-col gap-6">
-        <section>
-          <h1 className="text-[28px] leading-tight font-normal tracking-tight text-text md:text-[34px]" style={{ fontFamily: "var(--font-display)" }}>
-            Agenda de reuniones
-          </h1>
-          <p className="mt-1.5 text-sm text-muted md:text-[15px]">Reserva bloques de {SLOT_MINUTES} minutos en la sala durante los 3 días del evento.</p>
-        </section>
+  const noticeBox = notice && (
+    <div role="alert" className="flex items-start justify-between gap-3 rounded-xl border border-danger-bd bg-danger-soft px-4 py-3 text-sm text-danger">
+      <span>{notice}</span>
+      <button type="button" onClick={() => setNotice(null)} aria-label="Cerrar aviso" className="shrink-0 font-semibold">
+        ✕
+      </button>
+    </div>
+  );
 
-        {notice && (
-          <div role="alert" className="flex items-start justify-between gap-3 rounded-xl border border-danger-bd bg-danger-soft px-4 py-3 text-sm text-danger">
-            <span>{notice}</span>
-            <button type="button" onClick={() => setNotice(null)} aria-label="Cerrar aviso" className="shrink-0 font-semibold">
-              ✕
-            </button>
-          </div>
-        )}
-
-        <UserAgenda
-          onBookDay={bookDay}
-          onSlotClick={(date, time, state) => {
-            if (state.kind === "free") void openSlot(date, time);
-          }}
-        />
-      </div>
-
-      <div className="min-[1440px]:sticky min-[1440px]:top-6 min-[1440px]:w-[340px] min-[1440px]:shrink-0">
-        <UserSidePanel now={now} />
-      </div>
-
+  const sheets = (
+    <>
       {selected && (
         <Sheet title="Agendar reunión" description="Confirma el bloque y con quién te reunirás." onClose={closeSheet}>
           <MeetingForm
@@ -113,6 +117,45 @@ export function PublicView() {
           <Confirmation meeting={confirmed} onClose={() => setConfirmed(null)} />
         </Sheet>
       )}
+    </>
+  );
+
+  const onSlotClick = (date: string, time: string, state: SlotState) => {
+    if (state.kind === "free") void openSlot(date, time);
+  };
+
+  if (full) {
+    return (
+      <div className="fixed inset-0 z-[55] flex flex-col bg-surface">
+        {noticeBox && <div className="p-3">{noticeBox}</div>}
+        <div className="min-h-0 flex-1">
+          <UserAgenda bare onBookDay={bookDay} onSlotClick={onSlotClick} fullscreen={{ active: true, onToggle: toggleFullscreen }} />
+        </div>
+        {sheets}
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-6 min-[1440px]:flex-row min-[1440px]:items-start min-[1440px]:gap-10">
+      <div className="flex min-w-0 flex-1 flex-col gap-6">
+        <section>
+          <h1 className="text-[28px] leading-tight font-normal tracking-tight text-text md:text-[34px]" style={{ fontFamily: "var(--font-display)" }}>
+            Agenda de reuniones
+          </h1>
+          <p className="mt-1.5 text-sm text-muted md:text-[15px]">Reserva bloques de {SLOT_MINUTES} minutos en la sala durante los 3 días del evento.</p>
+        </section>
+
+        {noticeBox}
+
+        <UserAgenda onBookDay={bookDay} onSlotClick={onSlotClick} fullscreen={{ active: false, onToggle: toggleFullscreen }} />
+      </div>
+
+      <div className="min-[1440px]:sticky min-[1440px]:top-6 min-[1440px]:w-[340px] min-[1440px]:shrink-0">
+        <UserSidePanel now={now} />
+      </div>
+
+      {sheets}
     </div>
   );
 }

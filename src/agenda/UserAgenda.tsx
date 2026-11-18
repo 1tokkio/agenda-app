@@ -3,7 +3,7 @@
 import { useState, useSyncExternalStore } from "react";
 import { motion } from "motion/react";
 import { cn } from "@/lib/cn";
-import { DAYS, SLOT_MINUTES, SLOT_TIMES, TIME_ZONE } from "./data";
+import { DAYS, SLOT_TIMES, TIME_ZONE } from "./data";
 import { endTime } from "./logic";
 import { useAgenda, type SlotState } from "./store";
 
@@ -18,14 +18,20 @@ const TIME_COL_W = 76;
  * Agenda del usuario: los días del evento en columnas (vista "3 días") o la semana completa (vista "Semana").
  * Los días fuera del evento se muestran como columna rayada y no se pueden tocar.
  * En celular se ve un día a la vez, con pestañas para elegirlo.
+ * Con `bare` ocupa todo el alto de su contenedor, sin borde ni esquinas redondeadas: los bloques se reparten el alto disponible.
  */
 export function UserAgenda({
   onSlotClick,
   onBookDay,
+  bare = false,
+  fullscreen,
 }: {
   onSlotClick: (date: string, time: string, state: SlotState) => void;
   /** Abre la reserva del primer horario libre del día. */
   onBookDay: (date: string) => void;
+  bare?: boolean;
+  /** Botón para entrar o salir de la pantalla completa. */
+  fullscreen?: { active: boolean; onToggle: () => void };
 }) {
   const { slotState, meetings } = useAgenda();
   const [view, setView] = useState<View>("days");
@@ -38,9 +44,11 @@ export function UserAgenda({
   const last = columnDates[columnDates.length - 1];
 
   const freeOn = (date: string) => SLOT_TIMES.filter((time) => slotState(date, time).kind === "free").length;
+  // Normal: cada bloque mide ROW_H. Sin borde (bare): los bloques se reparten el alto, con ROW_H como mínimo.
+  const rowStyle: React.CSSProperties = bare ? { flex: "1 1 0", minHeight: ROW_H } : { height: ROW_H };
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className={cn("flex flex-col gap-4", bare && "h-full gap-0")}>
       {/* Pestañas de día para celular */}
       <div role="tablist" aria-label="Días del evento" className="grid grid-cols-3 gap-1 rounded-[14px] border border-border bg-surface-2 p-1 md:hidden">
         {DAYS.map((date) => (
@@ -64,7 +72,10 @@ export function UserAgenda({
         ))}
       </div>
 
-      <section aria-label="Agenda de la sala" className="overflow-hidden rounded-2xl border border-border bg-surface">
+      <section
+        aria-label="Agenda de la sala"
+        className={cn("overflow-hidden bg-surface", bare ? "flex min-h-0 flex-1 flex-col" : "rounded-2xl border border-border")}
+      >
         <header className="flex flex-wrap items-center justify-between gap-4 border-b border-border px-5 py-4">
           <div className="flex items-center gap-4">
             <div className="w-14 overflow-hidden rounded-[10px] border border-border text-center">
@@ -106,6 +117,16 @@ export function UserAgenda({
             <button type="button" disabled aria-label="Período siguiente" className={navButtonClass}>
               <ChevronIcon direction="right" />
             </button>
+            {fullscreen && (
+              <button
+                type="button"
+                onClick={fullscreen.onToggle}
+                aria-pressed={fullscreen.active}
+                className="h-10 rounded-[10px] border border-border bg-surface px-3.5 text-sm font-medium text-text-2 hover:bg-surface-2"
+              >
+                {fullscreen.active ? "Salir" : "Pantalla completa"}
+              </button>
+            )}
             <button
               type="button"
               onClick={() => onBookDay(activeDay)}
@@ -118,13 +139,13 @@ export function UserAgenda({
 
         <Legend />
 
-        <div className="overflow-x-auto">
-          <div className={cn("flex", view === "week" ? "md:min-w-[1040px]" : "md:min-w-[640px]")}>
+        <div className={cn("overflow-x-auto", bare && "min-h-0 flex-1 overflow-y-auto")}>
+          <div className={cn("flex", bare && "min-h-full", view === "week" ? "md:min-w-[1040px]" : "md:min-w-[640px]")}>
             {/* Columna de horas */}
-            <div className="shrink-0" style={{ flex: `0 0 ${TIME_COL_W}px` }}>
-              <div className="flex h-[76px] items-end justify-end pe-3 pb-3 text-[11px] text-muted">GMT-3</div>
+            <div className={cn("shrink-0", bare && "flex flex-col")} style={{ flex: `0 0 ${TIME_COL_W}px` }}>
+              <div className="flex h-[76px] shrink-0 items-end justify-end pe-3 pb-3 text-[11px] text-muted">GMT-3</div>
               {SLOT_TIMES.map((time) => (
-                <div key={time} className="pe-3 pt-1.5 text-end text-xs font-medium text-muted tabular-nums" style={{ height: ROW_H }}>
+                <div key={time} className="pe-3 pt-1.5 text-end text-xs font-medium text-muted tabular-nums" style={rowStyle}>
                   {time}
                 </div>
               ))}
@@ -143,7 +164,7 @@ export function UserAgenda({
                     onClick={() => setActiveDay(date)}
                     disabled={!isEvent}
                     aria-pressed={selected}
-                    className="flex h-[76px] items-center gap-3 border-b border-border px-3.5 text-start disabled:cursor-default"
+                    className="flex h-[76px] shrink-0 items-center gap-3 border-b border-border px-3.5 text-start disabled:cursor-default"
                   >
                     <span
                       className={cn(
@@ -166,10 +187,10 @@ export function UserAgenda({
                     </span>
                   </button>
 
-                  <div className={cn("relative flex-1", !isEvent && "col-off")}>
+                  <div className={cn("relative flex-1", bare && "flex flex-col", !isEvent && "col-off")}>
                     {isEvent &&
                       SLOT_TIMES.map((time) => (
-                        <div key={time} className="border-t border-border-soft px-1.5 py-1" style={{ height: ROW_H }}>
+                        <div key={time} className="border-t border-border-soft px-1.5 py-1" style={rowStyle}>
                           <SlotCell
                             date={date}
                             time={time}
@@ -279,7 +300,7 @@ function NowLine({ minutes }: { minutes: number }) {
   const start = toMinutes(SLOT_TIMES[0]);
   const end = toMinutes(endTime(SLOT_TIMES[SLOT_TIMES.length - 1]));
   if (minutes < start || minutes >= end) return null;
-  const top = ((minutes - start) / SLOT_MINUTES) * ROW_H;
+  const top = `${((minutes - start) / (end - start)) * 100}%`;
   return (
     <div aria-hidden="true" className="pointer-events-none absolute end-0 start-[-5px] flex items-center" style={{ top }}>
       <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: "var(--now)" }} />
